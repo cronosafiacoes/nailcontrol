@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e1b2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NailControl">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiTmFpbENvbnRyb2wiLCJzaG9ydF9uYW1lIjoiTmFpbENvbnRyb2wiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZhZjVmOSIsInRoZW1lX2NvbG9yIjoiIzFlMWIyZSJ9">
+<title>NailControl</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #e91e90;
+    --primary-dark: #c4167a;
+    --primary-light: #f5d0e8;
+    --secondary: #7c3aed;
+    --accent: #f59e0b;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --bg: #faf5f9;
+    --card: #ffffff;
+    --text: #1e1b2e;
+    --text-muted: #6b7280;
+    --border: #f0e4ec;
+    --shadow: 0 4px 24px rgba(233,30,144,0.08);
+    --shadow-hover: 0 8px 32px rgba(233,30,144,0.15);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 240px;
+    background: linear-gradient(180deg, #1e1b2e 0%, #2d1a3e 100%);
+    padding: 24px 16px;
+    z-index: 100;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 8px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    color: #fff; font-weight: 700; font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .logo-text span { color: var(--primary); font-weight: 800; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
+  .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+  .nav-label {
+    color: rgba(255,255,255,0.3);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 16px 16px 8px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .sidebar-footer .nav-item { font-size: 13px; }
+
+  /* MAIN */
+  .main { margin-left: 240px; padding: 24px 32px; min-height: 100vh; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* HEADER */
+  .page-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .page-title { font-size: 26px; font-weight: 800; }
+  .page-subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-hover); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 10px; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+  }
+
+  .card:hover { box-shadow: var(--shadow-hover); }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .stat-card.pink::before { background: linear-gradient(90deg, var(--primary), #f59e0b); }
+  .stat-card.purple::before { background: linear-gradient(90deg, var(--secondary), var(--primary)); }
+  .stat-card.green::before { background: linear-gradient(90deg, var(--success), #06b6d4); }
+  .stat-card.orange::before { background: linear-gradient(90deg, var(--warning), var(--danger)); }
+
+  .stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+
+  .stat-card.pink .stat-icon { background: #fdf2f8; }
+  .stat-card.purple .stat-icon { background: #f3e8ff; }
+  .stat-card.green .stat-icon { background: #ecfdf5; }
+  .stat-card.orange .stat-icon { background: #fffbeb; }
+
+  .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-label { color: var(--text-muted); font-size: 13px; margin-top: 6px; font-weight: 500; }
+
+  /* KANBAN */
+  .kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kanban-col {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 16px;
+    min-height: 300px;
+  }
+
+  .kanban-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .kanban-title {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .kanban-count {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .kanban-cards { display: flex; flex-direction: column; gap: 10px; }
+
+  .kanban-card {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .kanban-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--primary); }
+
+  .kanban-card-name { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .kanban-card-info { color: var(--text-muted); font-size: 12px; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .kanban-card-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  .badge-pago { background: #dcfce7; color: #166534; }
+  .badge-pendente { background: #fef3c7; color: #92400e; }
+  .badge-duvida { background: #e0e7ff; color: #3730a3; }
+  .badge-curiosa { background: #f3f4f6; color: #6b7280; }
+  .badge-busca { background: #fce7f3; color: #9d174d; }
+  .badge-entrega { background: #e0f2fe; color: #075985; }
+
+  .kanban-card-actions {
+    display: flex; gap: 4px; position: absolute; top: 10px; right: 10px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+
+  .kanban-card:hover .kanban-card-actions { opacity: 1; }
+
+  .kanban-card-actions button {
+    width: 24px; height: 24px;
+    border: none; border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .kanban-card-actions button:hover { background: var(--danger); color: #fff; }
+
+  /* CALENDAR */
+  .calendar-container { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  .calendar {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .calendar-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #fff;
+  }
+
+  .calendar-header h3 { font-size: 18px; font-weight: 700; }
+
+  .calendar-nav { display: flex; gap: 8px; }
+  .calendar-nav button {
+    width: 32px; height: 32px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .calendar-nav button:hover { background: rgba(255,255,255,0.2); border-color: #fff; }
+
+  .calendar-weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    padding: 12px 16px;
+    background: #fdf2f8;
+  }
+
+  .calendar-weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    text-transform: uppercase;
+  }
+
+  .calendar-days {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    padding: 8px 16px 16px;
+    gap: 4px;
+  }
+
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    gap: 3px;
+  }
+
+  .calendar-day:hover { background: var(--primary-light); }
+  .calendar-day.today { background: var(--primary); color: #fff; font-weight: 700; }
+  .calendar-day.other-month { color: #d1d5db; }
+  .calendar-day.has-event::after {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--primary);
+    position: absolute; bottom: 4px;
+  }
+  .calendar-day.today.has-event::after { background: #fff; }
+
+  .day-dots { display: flex; gap: 3px; position: absolute; bottom: 4px; }
+  .day-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .dot-busca { background: var(--primary); }
+  .dot-entrega { background: var(--info); }
+
+  /* SIDEBAR DO CALENDARIO */
+  .calendar-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .event-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .event-item {
+    display: flex; gap: 12px;
+    padding: 14px;
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .event-item:hover { box-shadow: var(--shadow-hover); }
+  .event-item.entrega { border-left-color: var(--info); }
+
+  .event-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 50px;
+  }
+
+  .event-item.entrega .event-time { color: var(--info); }
+
+  .event-details { flex: 1; }
+  .event-name { font-weight: 600; font-size: 13px; }
+  .event-type {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* FINANCE */
+  .finance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+  .finance-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .finance-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .finance-big { font-size: 32px; font-weight: 800; }
+
+  .finance-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .finance-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .finance-item:last-child { border-bottom: none; }
+
+  .finance-item-left { display: flex; align-items: center; gap: 10px; }
+  .finance-item-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .finance-item-name { font-weight: 600; font-size: 13px; }
+  .finance-item-date { color: var(--text-muted); font-size: 11px; }
+  .finance-item-value { font-weight: 700; font-size: 14px; }
+  .finance-item-value.positive { color: var(--success); }
+  .finance-item-value.negative { color: var(--danger); }
+
+  /* TABLE */
+  .table-container {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .table-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-header h3 { font-size: 16px; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    text-align: left;
+    padding: 12px 24px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    background: #fdf2f8;
+  }
+
+  td {
+    padding: 14px 24px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:hover td { background: #fdf2f8; }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+
+  .status-pago { background: var(--success); }
+  .status-pendente { background: var(--warning); }
+  .status-cancelado { background: var(--danger); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-header h2 { font-size: 18px; font-weight: 700; }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border: none; border-radius: 8px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-body { padding: 24px; }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #fff;
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(233,30,144,0.1);
+  }
+
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* SEARCH */
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+  }
+
+  .search-box:focus-within { border-color: var(--primary); }
+  .search-box input { border: none; outline: none; flex: 1; font-family: inherit; font-size: 14px; }
+  .search-box .icon { color: var(--text-muted); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* RESPONSIVE - MOBILE */
+  @media (max-width: 1024px) {
+    .kanban-board { grid-template-columns: repeat(2, 1fr); }
+    .calendar-container { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 16px; padding-bottom: 80px; }
+    .kanban-board { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .page-header .btn { width: 100%; justify-content: center; }
+    .modal { margin: 10px; max-height: 85vh; }
+    .form-row { grid-template-columns: 1fr; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+    .event-item { padding: 10px; }
+    .search-box { flex-wrap: wrap; }
+    .finance-grid { grid-template-columns: 1fr; }
+    .tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .tab { white-space: nowrap; }
+  }
+
+  /* BOTTOM NAV - MOBILE */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  }
+
+  .bottom-nav-items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .bottom-nav-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    border: none; background: none;
+    font-family: inherit;
+    min-width: 60px;
+  }
+
+  .bottom-nav-item .icon { font-size: 20px; }
+  .bottom-nav-item.active { color: var(--primary); background: var(--primary-light); }
+  .bottom-nav-item:hover { color: var(--primary); }
+
+  @media (max-width: 768px) {
+    .bottom-nav { display: block; }
+  }
+
+  /* SYNC BUTTON */
+  .sync-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+
+  .sync-bar .btn { font-size: 12px; padding: 8px 14px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--card); border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--border); }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+    border: none; background: none;
+    font-family: inherit;
+  }
+  .tab.active { background: var(--primary); color: #fff; }
+  .tab:hover:not(.active) { background: var(--primary-light); color: var(--primary); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .page.active { animation: fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">💅</div>
+    <div class="logo-text"><span>Nail</span>Control</div>
+  </div>
+
+  <div class="nav-item active" data-page="dashboard">
+    <span class="icon">📊</span> Dashboard
+  </div>
+  <div class="nav-item" data-page="clientes">
+    <span class="icon">👥</span> Clientes
+  </div>
+  <div class="nav-item" data-page="calendario">
+    <span class="icon">📅</span> Calendário
+  </div>
+  <div class="nav-item" data-page="financeiro">
+    <span class="icon">💰</span> Financeiro
+  </div>
+
+  <div class="nav-label">Organização</div>
+  <div class="nav-item" data-page="agendamentos">
+    <span class="icon">📋</span> Agendamentos
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="nav-item" onclick="exportarDados()">
+      <span class="icon">💾</span> Exportar Dados
+    </div>
+    <div class="nav-item" onclick="importarDados()">
+      <span class="icon">📂</span> Importar Dados
+    </div>
+  </div>
+</nav>
+
+<!-- BOTTOM NAV - MOBILE -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-items">
+    <button class="bottom-nav-item active" data-page="dashboard">
+      <span class="icon">📊</span>
+      <span>Inicio</span>
+    </button>
+    <button class="bottom-nav-item" data-page="clientes">
+      <span class="icon">👥</span>
+      <span>Clientes</span>
+    </button>
+    <button class="bottom-nav-item" data-page="calendario">
+      <span class="icon">📅</span>
+      <span>Agenda</span>
+    </button>
+    <button class="bottom-nav-item" data-page="agendamentos">
+      <span class="icon">📋</span>
+      <span>Lista</span>
+    </button>
+    <button class="bottom-nav-item" data-page="financeiro">
+      <span class="icon">💰</span>
+      <span>Financeiro</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle">Visão geral do seu negócio</div>
+    </div>
+  </div>
+
+  <div class="sync-bar">
+    <span id="sync-status" style="font-size:12px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:4px;">🟡 Conectando...</span>
+    <button class="btn btn-primary btn-sm" onclick="sincronizar()">💾 Salvar</button>
+    <button class="btn btn-outline btn-sm" onclick="exportarDados()">📤 Exportar</button>
+    <button class="btn btn-outline btn-sm" onclick="importarDados()">📥 Importar</button>
+  </div>
+
+    <div class="stats-grid">
+      <div class="stat-card pink">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Total de Clientes</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="stat-atendidas">0</div>
+        <div class="stat-label">Atendidas</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-value" id="stat-pendentes">0</div>
+        <div class="stat-label">Pendentes</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="stat-receita">R$ 0</div>
+        <div class="stat-label">Receita Total</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-icon">📤</div>
+        <div class="stat-value" id="stat-buscas">0</div>
+        <div class="stat-label">Coletas Hoje</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-icon">📥</div>
+        <div class="stat-value" id="stat-entregas">0</div>
+        <div class="stat-label">Entregas Hoje</div>
+      </div>
+      <div class="stat-card pink">
+        <div class="stat-icon">🧴</div>
+        <div class="stat-value" id="stat-alicates">0</div>
+        <div class="stat-label">Alicates em Aberto</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">📢</div>
+        <div class="stat-value" id="stat-anuncios">R$ 0</div>
+        <div class="stat-label">Gasto c/ Anúncios</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card green" style="border-left:3px solid var(--success);">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="stat-lucro">R$ 0</div>
+        <div class="stat-label">Lucro Líquido</div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:14px;font-size:16px;font-weight:700;">Próximos Agendamentos</h3>
+    <div id="dashboard-events" class="event-list"></div>
+
+    <h3 style="margin:24px 0 14px;font-size:16px;font-weight:700;">💰 Pagamentos Pendentes</h3>
+    <div id="dashboard-pagamentos" class="event-list"></div>
+  </div>
+
+  <!-- ==================== CLIENTES ==================== -->
+  <div class="page" id="page-clientes">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Clientes</div>
+        <div class="page-subtitle">Organize suas clientes por status</div>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalCliente()">
+        <span>+</span> Nova Cliente
+      </button>
+    </div>
+
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Buscar cliente..." id="busca-cliente" oninput="renderizarKanban()">
+    </div>
+
+    <div class="kanban-board" id="kanban-board">
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="kanban-title">🤝 Vai Fazer <span class="kanban-count" id="count-vai-fazer">0</span></div>
+        </div>
+        <div class="kanban-cards" id="col-vai-fazer"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="kanban-title">🤔 Em Dúvida <span class="kanban-count" id="count-duvida">0</span></div>
+        </div>
+        <div class="kanban-cards" id="col-duvida"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="kanban-title">🔍 Só Curiosa <span class="kanban-count" id="count-curiosa">0</span></div>
+        </div>
+        <div class="kanban-cards" id="col-curiosa"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="kanban-title">✅ Atendida <span class="kanban-count" id="count-atendida">0</span></div>
+        </div>
+        <div class="kanban-cards" id="col-atendida"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CALENDARIO ==================== -->
+  <div class="page" id="page-calendario">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Calendário</div>
+        <div class="page-subtitle">Visualize coletas e entregas</div>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalAgendamento()">
+        <span>+</span> Novo Agendamento
+      </button>
+    </div>
+
+    <div class="calendar-container">
+      <div class="calendar">
+        <div class="calendar-header">
+          <h3 id="calendar-month-year"></h3>
+          <div class="calendar-nav">
+            <button onclick="mudarMes(-1)">◀</button>
+            <button onclick="mudarMes(0)">Hoje</button>
+            <button onclick="mudarMes(1)">▶</button>
+          </div>
+        </div>
+        <div class="calendar-weekdays">
+          <div class="calendar-weekday">Dom</div>
+          <div class="calendar-weekday">Seg</div>
+          <div class="calendar-weekday">Ter</div>
+          <div class="calendar-weekday">Qua</div>
+          <div class="calendar-weekday">Qui</div>
+          <div class="calendar-weekday">Sex</div>
+          <div class="calendar-weekday">Sáb</div>
+        </div>
+        <div class="calendar-days" id="calendar-days"></div>
+      </div>
+
+      <div class="calendar-sidebar">
+        <div class="card" style="margin-bottom:12px;">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">📦 Total do Dia</h3>
+          <div id="day-total" style="font-size:13px;color:var(--text-muted);">Selecione um dia</div>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Agendamentos do Dia</h3>
+          <div id="day-events" class="event-list">
+            <div class="empty-state">
+              <div class="icon">📅</div>
+              <p>Selecione um dia</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FINANCEIRO ==================== -->
+  <div class="page" id="page-financeiro">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Financeiro</div>
+        <div class="page-subtitle">Controle seus ganhos e gastos</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-success" onclick="abrirModalReceita()">+ Receita</button>
+        <button class="btn btn-danger" onclick="abrirModalDespesa()">- Despesa</button>
+      </div>
+    </div>
+
+    <div class="finance-grid">
+      <div class="finance-card" style="border-left:4px solid var(--success);">
+        <h3>📈 Receitas</h3>
+        <div class="finance-big" style="color:var(--success);" id="fin-receitas">R$ 0,00</div>
+      </div>
+      <div class="finance-card" style="border-left:4px solid var(--danger);">
+        <h3>📉 Despesas</h3>
+        <div class="finance-big" style="color:var(--danger);" id="fin-despesas">R$ 0,00</div>
+      </div>
+      <div class="finance-card" style="border-left:4px solid var(--primary);">
+        <h3>💰 Lucro Líquido</h3>
+        <div class="finance-big" style="color:var(--primary);" id="fin-lucro">R$ 0,00</div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div class="table-header">
+        <h3>Histórico</h3>
+        <div class="tabs">
+          <button class="tab active" onclick="filtroFinanceiro('todos',this)">Todos</button>
+          <button class="tab" onclick="filtroFinanceiro('receita',this)">Receitas</button>
+          <button class="tab" onclick="filtroFinanceiro('despesa',this)">Despesas</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="fin-tabela"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==================== AGENDAMENTOS ==================== -->
+  <div class="page" id="page-agendamentos">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Agendamentos</div>
+        <div class="page-subtitle">Lista completa de coletas e entregas</div>
+      </div>
+      <button class="btn btn-primary" onclick="abrirModalAgendamento()">
+        <span>+</span> Novo Agendamento
+      </button>
+    </div>
+
+    <div class="search-box">
+      <span class="icon">🔍</span>
+      <input type="text" placeholder="Buscar agendamento..." id="busca-agendamento" oninput="renderizarTabelaAgendamentos()">
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Item</th>
+            <th>Qtd</th>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Endereço</th>
+            <th>Pagamento</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="agend-tabela"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-cliente-titulo">Nova Cliente</h2>
+      <button class="modal-close" onclick="fecharModal('modal-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cliente-id">
+      <div class="form-group">
+        <label class="form-label">Nome da Cliente</label>
+        <input type="text" class="form-input" id="cliente-nome" placeholder="Ex: Cláudia">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="text" class="form-input" id="cliente-telefone" placeholder="(00) 00000-0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="cliente-status">
+            <option value="vai-fazer">Vai Fazer</option>
+            <option value="duvida">Em Dúvida</option>
+            <option value="curiosa">Só Curiosa</option>
+            <option value="atendida">Atendida</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Endereço</label>
+        <input type="text" class="form-input" id="cliente-endereco" placeholder="Rua, número, bairro...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Quantidade</label>
+          <input type="number" class="form-input" id="cliente-quantidade" min="1" value="1" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">O que vai gravar?</label>
+          <input type="text" class="form-input" id="cliente-item" placeholder="Ex: Alicate rosa, adorned...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Forma de Pagamento</label>
+          <select class="form-select" id="cliente-pagamento">
+            <option value="">Selecione...</option>
+            <option value="Pix">Pix</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão">Cartão</option>
+            <option value="Transferência">Transferência</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor (R$)</label>
+          <input type="number" class="form-input" id="cliente-valor" placeholder="0,00" step="0.01">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-textarea" id="cliente-obs" placeholder="Alicate, cor, preferências..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agendamento -->
+<div class="modal-overlay" id="modal-agendamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-agend-titulo">Novo Agendamento</h2>
+      <button class="modal-close" onclick="fecharModal('modal-agendamento')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="agend-id">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <select class="form-select" id="agend-cliente" onchange="preencherAgendamentoCliente()"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="agend-tipo" onchange="mostrarOpcaoEntrega()">
+            <option value="busca">📤 Coleta (Buscar Alicate)</option>
+            <option value="entrega">📥 Entrega (Devolver Alicate)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="agend-status">
+            <option value="pendente">Pendente</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div id="opcao-entrega-auto" style="display:none;background:#fdf2f8;border-radius:10px;padding:12px 16px;margin-bottom:16px;border:1px solid #f5d0e8;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="agend-criar-entrega" checked style="width:16px;height:16px;accent-color:var(--primary);">
+          📅 Agendar entrega automaticamente no próximo dia
+        </label>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+          <input type="date" class="form-input" id="agend-data-entrega" style="flex:1;padding:6px 10px;font-size:12px;">
+          <input type="text" class="form-input" id="agend-hora-entrega" style="width:120px;padding:6px 10px;font-size:12px;" readonly placeholder="Horário">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-input" id="agend-data" onchange="atualizarDataEntrega()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Horário</label>
+          <input type="time" class="form-input" id="agend-hora" onchange="atualizarHoraEntrega()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Endereço</label>
+        <input type="text" class="form-input" id="agend-endereco" placeholder="Preenche automaticamente da cliente">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Quantidade</label>
+          <input type="number" class="form-input" id="agend-quantidade" min="1" value="1" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">O que vai gravar?</label>
+          <input type="text" class="form-input" id="agend-item" placeholder="Ex: Alicate rosa, alicate adorned...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-textarea" id="agend-obs" placeholder="Detalhes do agendamento..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-agendamento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAgendamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Receita -->
+<div class="modal-overlay" id="modal-receita">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nova Receita</h2>
+      <button class="modal-close" onclick="fecharModal('modal-receita')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-input" id="rec-desc" placeholder="Ex: Serviço - Cláudia">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor (R$)</label>
+          <input type="number" class="form-input" id="rec-valor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-input" id="rec-data">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="rec-categoria">
+          <option value="servico">Serviço</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-receita')">Cancelar</button>
+      <button class="btn btn-success" onclick="salvarReceita()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Despesa -->
+<div class="modal-overlay" id="modal-despesa">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Nova Despesa</h2>
+      <button class="modal-close" onclick="fecharModal('modal-despesa')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <input type="text" class="form-input" id="desp-desc" placeholder="Ex: Anúncio Facebook Ads">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor (R$)</label>
+          <input type="number" class="form-input" id="desp-valor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="date" class="form-input" id="desp-data">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="desp-categoria">
+          <option value="anuncio">📢 Anúncio (Facebook Ads)</option>
+          <option value="transporte">🚗 Transporte</option>
+          <option value="material">📦 Material</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="fecharModal('modal-despesa')">Cancelar</button>
+      <button class="btn btn-danger" onclick="salvarDespesa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ FIREBASE CONFIG ============
+// ⚠️ SUBSTITUA PELO SEU CONFIG DO FIREBASE ⚠️
+const firebaseConfig = {
+  apiKey: "AIzaSyBBERqs003HKOlIX_q5h7O7DywO7jwlGhI",
+  authDomain: "nailcontrol-21607.firebaseapp.com",
+  databaseURL: "https://nailcontrol-21607-default-rtdb.firebaseio.com",
+  projectId: "nailcontrol-21607",
+  storageBucket: "nailcontrol-21607.firebasestorage.app",
+  messagingSenderId: "493642925848",
+  appId: "1:493642925848:web:2ed04dd98fad3edebe806d"
+};
+
+let firebaseOk = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.database();
+  var dbRef = db.ref('nailcontrol');
+  firebaseOk = firebaseConfig.apiKey !== 'SUA_API_KEY';
+} catch(e) {
+  console.log('Firebase não configurado, usando localStorage');
+}
+
+// ============ DATA STORE ============
+let clientes = [];
+let agendamentos = [];
+let financeiro = [];
+let calendarDate = new Date();
+let diaSelecionado = new Date();
+let syncAtivo = false;
+
+// Carregar dados do Firebase
+function carregarDadosFirebase() {
+  dbRef.on('value', (snapshot) => {
+    const dados = snapshot.val();
+    if (dados) {
+      clientes = dados.clientes || [];
+      agendamentos = dados.agendamentos || [];
+      financeiro = dados.financeiro || [];
+      syncAtivo = true;
+      document.getElementById('sync-status').textContent = '🟢 Online';
+      document.getElementById('sync-status').style.color = 'var(--success)';
+    } else {
+      syncAtivo = true;
+      document.getElementById('sync-status').textContent = '🟢 Online';
+      document.getElementById('sync-status').style.color = 'var(--success)';
+    }
+    renderizarKanban();
+    renderizarDashboard();
+  }, (error) => {
+    console.error('Erro ao carregar do Firebase:', error);
+    document.getElementById('sync-status').textContent = '🔴 Offline';
+    document.getElementById('sync-status').style.color = 'var(--danger)';
+    syncAtivo = false;
+    // Fallback para localStorage
+    clientes = carregarDadosLocal('clientes', []);
+    agendamentos = carregarDadosLocal('agendamentos', []);
+    financeiro = carregarDadosLocal('financeiro', []);
+    renderizarKanban();
+    renderizarDashboard();
+  });
+}
+
+// Salvar dados no Firebase
+function salvarDados(chave, dados) {
+  // Sempre salvar no localStorage também (backup)
+  localStorage.setItem('nc_' + chave, JSON.stringify(dados));
+
+  // Salvar no Firebase se conectado
+  if (syncAtivo) {
+    dbRef.child(chave).set(dados).catch((error) => {
+      console.error('Erro ao salvar no Firebase:', error);
+    });
+  }
+}
+
+// Fallback localStorage
+function carregarDadosLocal(chave, padrao) {
+  try { return JSON.parse(localStorage.getItem('nc_' + chave)) || padrao; }
+  catch { return padrao; }
+}
+
+// Carregar dados iniciais (localStorage enquanto Firebase conecta)
+clientes = carregarDadosLocal('clientes', []);
+agendamentos = carregarDadosLocal('agendamentos', []);
+financeiro = carregarDadosLocal('financeiro', []);
+
+// Conectar ao Firebase após 1 segundo (se configurado)
+setTimeout(() => {
+  if (firebaseOk) {
+    carregarDadosFirebase();
+  } else {
+    document.getElementById('sync-status').textContent = '🟡 Local (configure Firebase)';
+    document.getElementById('sync-status').style.color = 'var(--warning)';
+  }
+}, 1000);
+
+// ============ NAVIGATION ============
+function navegarPara(page) {
+  document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+  document.querySelector(`.bottom-nav-item[data-page="${page}"]`)?.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'calendario') renderizarCalendario();
+  if (page === 'financeiro') renderizarFinanceiro();
+  if (page === 'agendamentos') renderizarTabelaAgendamentos();
+  if (page === 'dashboard') renderizarDashboard();
+  window.scrollTo(0, 0);
+}
+
+document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => navegarPara(item.dataset.page));
+});
+
+document.querySelectorAll('.bottom-nav-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => navegarPara(item.dataset.page));
+});
+
+// ============ MODALS ============
+function abrirModal(id) { document.getElementById(id).classList.add('active'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function abrirModalCliente(id) {
+  document.getElementById('modal-cliente-titulo').textContent = id ? 'Editar Cliente' : 'Nova Cliente';
+  document.getElementById('cliente-id').value = id || '';
+  if (id) {
+    const c = clientes.find(x => x.id === id);
+    if (c) {
+      document.getElementById('cliente-nome').value = c.nome;
+      document.getElementById('cliente-telefone').value = c.telefone || '';
+      document.getElementById('cliente-status').value = c.status;
+      document.getElementById('cliente-endereco').value = c.endereco || '';
+      document.getElementById('cliente-quantidade').value = c.quantidade || 1;
+      document.getElementById('cliente-item').value = c.item || '';
+      document.getElementById('cliente-pagamento').value = c.pagamento || '';
+      document.getElementById('cliente-valor').value = c.valor || '';
+      document.getElementById('cliente-obs').value = c.obs || '';
+    }
+  } else {
+    ['cliente-nome','cliente-telefone','cliente-endereco','cliente-quantidade','cliente-item','cliente-valor','cliente-obs'].forEach(x => document.getElementById(x).value = '');
+    document.getElementById('cliente-status').value = 'vai-fazer';
+    document.getElementById('cliente-pagamento').value = '';
+    document.getElementById('cliente-quantidade').value = 1;
+  }
+  abrirModal('modal-cliente');
+}
+
+function abrirModalAgendamento(id) {
+  const sel = document.getElementById('agend-cliente');
+  sel.innerHTML = '<option value="">Selecione a cliente...</option>' +
+    clientes.map(c => `<option value="${c.id}">${c.nome}${c.item ? ' — ' + c.item : ''}</option>`).join('');
+
+  document.getElementById('modal-agend-titulo').textContent = id ? 'Editar Agendamento' : 'Novo Agendamento';
+  document.getElementById('agend-id').value = id || '';
+
+  if (id) {
+    const a = agendamentos.find(x => x.id === id);
+    if (a) {
+      sel.value = a.clienteId;
+      document.getElementById('agend-tipo').value = a.tipo;
+      document.getElementById('agend-status').value = a.status;
+      document.getElementById('agend-data').value = a.data;
+      document.getElementById('agend-hora').value = a.hora || '';
+      document.getElementById('agend-endereco').value = a.endereco || '';
+      document.getElementById('agend-quantidade').value = a.quantidade || 1;
+      document.getElementById('agend-item').value = a.item || '';
+      document.getElementById('agend-obs').value = a.obs || '';
+    }
+  } else {
+    document.getElementById('agend-tipo').value = 'busca';
+    document.getElementById('agend-status').value = 'pendente';
+    document.getElementById('agend-data').value = new Date().toISOString().split('T')[0];
+    document.getElementById('agend-hora').value = '';
+    document.getElementById('agend-endereco').value = '';
+    document.getElementById('agend-quantidade').value = 1;
+    document.getElementById('agend-item').value = '';
+    document.getElementById('agend-obs').value = '';
+    document.getElementById('agend-criar-entrega').checked = true;
+    mostrarOpcaoEntrega();
+  }
+  abrirModal('modal-agendamento');
+}
+
+function abrirModalReceita() {
+  document.getElementById('rec-desc').value = '';
+  document.getElementById('rec-valor').value = '';
+  document.getElementById('rec-data').value = new Date().toISOString().split('T')[0];
+  abrirModal('modal-receita');
+}
+
+function abrirModalDespesa() {
+  document.getElementById('desp-desc').value = '';
+  document.getElementById('desp-valor').value = '';
+  document.getElementById('desp-data').value = new Date().toISOString().split('T')[0];
+  abrirModal('modal-despesa');
+}
+
+// ============ CLIENTES ============
+function salvarCliente() {
+  const id = document.getElementById('cliente-id').value;
+  const dados = {
+    id: id || Date.now().toString(),
+    nome: document.getElementById('cliente-nome').value.trim(),
+    telefone: document.getElementById('cliente-telefone').value.trim(),
+    status: document.getElementById('cliente-status').value,
+    endereco: document.getElementById('cliente-endereco').value.trim(),
+    quantidade: parseInt(document.getElementById('cliente-quantidade').value) || 1,
+    item: document.getElementById('cliente-item').value.trim(),
+    pagamento: document.getElementById('cliente-pagamento').value,
+    valor: parseFloat(document.getElementById('cliente-valor').value) || 0,
+    obs: document.getElementById('cliente-obs').value.trim(),
+    criadoEm: id ? (clientes.find(c => c.id === id)?.criadoEm || new Date().toISOString()) : new Date().toISOString()
+  };
+
+  if (!dados.nome) { alert('Digite o nome da cliente!'); return; }
+
+  if (id) {
+    clientes = clientes.map(c => c.id === id ? dados : c);
+  } else {
+    clientes.push(dados);
+  }
+
+  salvarDados('clientes', clientes);
+  fecharModal('modal-cliente');
+  renderizarKanban();
+  renderizarDashboard();
+}
+
+function excluirCliente(id) {
+  if (!confirm('Excluir esta cliente?')) return;
+  clientes = clientes.filter(c => c.id !== id);
+  agendamentos = agendamentos.filter(a => a.clienteId !== id);
+  salvarDados('clientes', clientes);
+  salvarDados('agendamentos', agendamentos);
+  renderizarKanban();
+  renderizarDashboard();
+}
+
+function renderizarKanban() {
+  const busca = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
+  const colunas = {
+    'vai-fazer': clientes.filter(c => c.status === 'vai-fazer' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'duvida': clientes.filter(c => c.status === 'duvida' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'curiosa': clientes.filter(c => c.status === 'curiosa' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'atendida': clientes.filter(c => c.status === 'atendida' && (!busca || c.nome.toLowerCase().includes(busca)))
+  };
+
+  Object.keys(colunas).forEach(col => {
+    const container = document.getElementById('col-' + col);
+    const count = document.getElementById('count-' + col);
+    count.textContent = colunas[col].length;
+    container.innerHTML = colunas[col].length ? colunas[col].map(c => `
+      <div class="kanban-card" onclick="abrirModalCliente('${c.id}')">
+        <div class="kanban-card-actions">
+          <button onclick="event.stopPropagation();excluirCliente('${c.id}')" title="Excluir">🗑</button>
+        </div>
+        <div class="kanban-card-name">${c.nome}</div>
+        ${c.telefone ? `<div class="kanban-card-info">📱 ${c.telefone}</div>` : ''}
+        ${c.item ? `<div class="kanban-card-info">🧴 ${c.item}${c.quantidade > 1 ? ' (x' + c.quantidade + ')' : ''}</div>` : ''}
+        ${c.endereco ? `<div class="kanban-card-info">📍 ${c.endereco}</div>` : ''}
+        ${c.valor ? `<div class="kanban-card-info">💰 R$ ${c.valor.toFixed(2)}</div>` : ''}
+        ${c.pagamento ? `<span class="kanban-card-badge badge-${c.status === 'atendida' ? 'pago' : 'pendente'}">${c.pagamento}</span>` : ''}
+        ${c.obs ? `<div class="kanban-card-info" style="margin-top:4px;font-style:italic;">💬 ${c.obs}</div>` : ''}
+      </div>
+    `).join('') : '<div class="empty-state"><p>Nenhuma cliente</p></div>';
+  });
+}
+
+// ============ CALENDARIO ============
+function mudarMes(dir) {
+  if (dir === 0) { calendarDate = new Date(); }
+  else { calendarDate.setMonth(calendarDate.getMonth() + dir); }
+  renderizarCalendario();
+}
+
+function renderizarCalendario() {
+  const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('calendar-month-year').textContent = months[calendarDate.getMonth()] + ' ' + calendarDate.getFullYear();
+
+  const firstDay = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
+  const daysInMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate();
+  const today = new Date();
+
+  let html = '';
+  const prevMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 0);
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<div class="calendar-day other-month">${prevMonth.getDate() - i}</div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = d === today.getDate() && calendarDate.getMonth() === today.getMonth() && calendarDate.getFullYear() === today.getFullYear();
+    const eventos = agendamentos.filter(a => a.data === dateStr);
+    const hasBusca = eventos.some(a => a.tipo === 'busca');
+    const hasEntrega = eventos.some(a => a.tipo === 'entrega');
+    const totalAlicates = eventos.reduce((s, a) => {
+      const cliente = clientes.find(c => c.id === a.clienteId);
+      return s + (a.quantidade || cliente?.quantidade || 1);
+    }, 0);
+
+    let classes = 'calendar-day';
+    if (isToday) classes += ' today';
+    if (eventos.length) classes += ' has-event';
+
+    let badge = '';
+    if (totalAlicates > 0) {
+      badge = `<div style="position:absolute;top:2px;right:2px;background:var(--primary);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;line-height:1.2;">${totalAlicates}</div>`;
+    }
+
+    let dots = '';
+    if (hasBusca || hasEntrega) {
+      dots = '<div class="day-dots">';
+      if (hasBusca) dots += '<div class="day-dot dot-busca"></div>';
+      if (hasEntrega) dots += '<div class="day-dot dot-entrega"></div>';
+      dots += '</div>';
+    }
+
+    html += `<div class="${classes}" onclick="selecionarDia('${dateStr}')">${badge}${d}${dots}</div>`;
+  }
+
+  const remaining = 42 - (firstDay + daysInMonth);
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="calendar-day other-month">${i}</div>`;
+  }
+
+  document.getElementById('calendar-days').innerHTML = html;
+  selecionarDia(diaSelecionado.toISOString().split('T')[0]);
+}
+
+function selecionarDia(dateStr) {
+  diaSelecionado = new Date(dateStr + 'T12:00:00');
+  const eventos = agendamentos.filter(a => a.data === dateStr);
+  const container = document.getElementById('day-events');
+  const totalContainer = document.getElementById('day-total');
+
+  const totalAlicates = eventos.reduce((s, a) => {
+    const cliente = clientes.find(c => c.id === a.clienteId);
+    return s + (a.quantidade || cliente?.quantidade || 1);
+  }, 0);
+  const totalColetas = eventos.filter(a => a.tipo === 'busca').length;
+  const totalEntregas = eventos.filter(a => a.tipo === 'entrega').length;
+
+  if (eventos.length) {
+    totalContainer.innerHTML = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="background:#fdf2f8;padding:8px 12px;border-radius:8px;flex:1;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:var(--primary);">${eventos.length}</div>
+          <div style="font-size:11px;">Agendamentos</div>
+        </div>
+        <div style="background:#fce7f3;padding:8px 12px;border-radius:8px;flex:1;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:var(--primary);">${totalColetas}</div>
+          <div style="font-size:11px;">📤 Coletas</div>
+        </div>
+        <div style="background:#e0f2fe;padding:8px 12px;border-radius:8px;flex:1;text-align:center;">
+          <div style="font-size:20px;font-weight:800;color:var(--info);">${totalEntregas}</div>
+          <div style="font-size:11px;">📥 Entregas</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-muted);text-align:center;">🧴 Total: ${totalAlicates} alicate${totalAlicates !== 1 ? 's' : ''}</div>
+    `;
+  } else {
+    totalContainer.innerHTML = '<span style="color:var(--text-muted);">Nenhum agendamento</span>';
+  }
+
+  if (!eventos.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>Nenhum agendamento</p></div>';
+    return;
+  }
+
+  container.innerHTML = eventos.map(a => {
+    const cliente = clientes.find(c => c.id === a.clienteId);
+    const qtd = a.quantidade || cliente?.quantidade || 1;
+    const item = a.item || cliente?.item || 'Alicates';
+    const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
+    return `
+      <div class="event-item ${a.tipo}">
+        <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
+        <div class="event-details">
+          <div class="event-name">${cliente?.nome || 'Cliente'}</div>
+          <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${a.status === 'concluido' ? '✅ Concluído' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente'}</div>
+          <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============ AGENDAMENTOS ============
+function preencherAgendamentoCliente() {
+  const clienteId = document.getElementById('agend-cliente').value;
+  const cliente = clientes.find(c => c.id === clienteId);
+  if (cliente) {
+    document.getElementById('agend-item').value = cliente.item || '';
+    document.getElementById('agend-quantidade').value = cliente.quantidade || 1;
+    document.getElementById('agend-endereco').value = cliente.endereco || '';
+  }
+}
+
+function mostrarOpcaoEntrega() {
+  const tipo = document.getElementById('agend-tipo').value;
+  const divEntrega = document.getElementById('opcao-entrega-auto');
+  if (tipo === 'busca') {
+    divEntrega.style.display = 'block';
+    const dataColeta = document.getElementById('agend-data').value;
+    if (dataColeta) {
+      const proximoDia = new Date(dataColeta + 'T12:00:00');
+      proximoDia.setDate(proximoDia.getDate() + 1);
+      document.getElementById('agend-data-entrega').value = proximoDia.toISOString().split('T')[0];
+    }
+    atualizarHoraEntrega();
+  } else {
+    divEntrega.style.display = 'none';
+  }
+}
+
+function atualizarDataEntrega() {
+  const dataColeta = document.getElementById('agend-data').value;
+  if (dataColeta && document.getElementById('agend-tipo').value === 'busca') {
+    const proximoDia = new Date(dataColeta + 'T12:00:00');
+    proximoDia.setDate(proximoDia.getDate() + 1);
+    document.getElementById('agend-data-entrega').value = proximoDia.toISOString().split('T')[0];
+  }
+}
+
+function atualizarHoraEntrega() {
+  const horaColeta = document.getElementById('agend-hora').value;
+  if (horaColeta && document.getElementById('agend-tipo').value === 'busca') {
+    const [h, m] = horaColeta.split(':').map(Number);
+    const horaFim = h + 3;
+    const horaFimFormatada = `${String(horaFim > 23 ? 23 : horaFim).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    document.getElementById('agend-hora-entrega').value = `${horaColeta} - ${horaFimFormatada}`;
+  }
+}
+
+function salvarAgendamento() {
+  const id = document.getElementById('agend-id').value;
+  const clienteId = document.getElementById('agend-cliente').value;
+  if (!clienteId) { alert('Selecione uma cliente!'); return; }
+
+  const cliente = clientes.find(c => c.id === clienteId);
+
+  const dados = {
+    id: id || Date.now().toString(),
+    clienteId,
+    tipo: document.getElementById('agend-tipo').value,
+    status: document.getElementById('agend-status').value,
+    data: document.getElementById('agend-data').value,
+    hora: document.getElementById('agend-hora').value,
+    endereco: document.getElementById('agend-endereco').value || cliente?.endereco || '',
+    quantidade: parseInt(document.getElementById('agend-quantidade').value) || 1,
+    item: document.getElementById('agend-item').value.trim(),
+    obs: document.getElementById('agend-obs').value.trim()
+  };
+
+  if (!dados.data) { alert('Selecione uma data!'); return; }
+
+  if (id) {
+    agendamentos = agendamentos.map(a => a.id === id ? dados : a);
+  } else {
+    agendamentos.push(dados);
+
+    // Criar entrega automaticamente se marcado
+    if (dados.tipo === 'busca' && document.getElementById('agend-criar-entrega').checked) {
+      const dataEntrega = document.getElementById('agend-data-entrega').value;
+      const horaEntrega = document.getElementById('agend-hora-entrega').value;
+      if (dataEntrega) {
+        agendamentos.push({
+          id: (Date.now() + 1).toString(),
+          clienteId,
+          tipo: 'entrega',
+          status: 'pendente',
+          data: dataEntrega,
+          hora: horaEntrega,
+          endereco: dados.endereco,
+          quantidade: dados.quantidade,
+          item: dados.item,
+          obs: dados.obs
+        });
+      }
+    }
+  }
+
+  salvarDados('agendamentos', agendamentos);
+  fecharModal('modal-agendamento');
+  renderizarCalendario();
+  renderizarDashboard();
+  renderizarTabelaAgendamentos();
+}
+
+function excluirAgendamento(id) {
+  if (!confirm('Excluir este agendamento?')) return;
+  agendamentos = agendamentos.filter(a => a.id !== id);
+  salvarDados('agendamentos', agendamentos);
+  renderizarCalendario();
+  renderizarDashboard();
+  renderizarTabelaAgendamentos();
+}
+
+function concluirAgendamento(id) {
+  agendamentos = agendamentos.map(a => a.id === id ? {...a, status: 'concluido'} : a);
+  salvarDados('agendamentos', agendamentos);
+  renderizarCalendario();
+  renderizarDashboard();
+  renderizarTabelaAgendamentos();
+}
+
+function renderizarTabelaAgendamentos() {
+  const busca = (document.getElementById('busca-agendamento')?.value || '').toLowerCase();
+  const lista = agendamentos
+    .filter(a => !busca || (clientes.find(c => c.id === a.clienteId)?.nome || '').toLowerCase().includes(busca))
+    .sort((a, b) => a.data.localeCompare(b.data));
+
+  const tbody = document.getElementById('agend-tabela');
+  tbody.innerHTML = lista.length ? lista.map(a => {
+    const cliente = clientes.find(c => c.id === a.clienteId);
+    const qtd = a.quantidade || cliente?.quantidade || 1;
+    const item = a.item || cliente?.item || '—';
+    return `
+      <tr>
+        <td><strong>${cliente?.nome || '?'}</strong></td>
+        <td>${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'}</td>
+        <td>${item}</td>
+        <td><strong style="color:var(--primary);">${qtd}</strong></td>
+        <td>${formatarData(a.data)}</td>
+        <td>${a.hora && a.hora.includes(' - ') ? `<span style="font-size:11px;">🕐 ${a.hora}</span>` : (a.hora || '—')}</td>
+        <td>${a.endereco || '—'}</td>
+        <td>${cliente?.pagamento || '—'}</td>
+        <td><span class="status-dot status-${a.status === 'concluido' ? 'pago' : a.status === 'cancelado' ? 'cancelado' : 'pendente'}"></span>${a.status === 'concluido' ? 'Concluído' : a.status === 'cancelado' ? 'Cancelado' : 'Pendente'}</td>
+        <td style="display:flex;gap:4px;">
+          ${a.status !== 'concluido' ? `<button class="btn btn-sm btn-success" onclick="concluirAgendamento('${a.id}')">✓</button>` : ''}
+          <button class="btn btn-sm btn-outline" onclick="abrirModalAgendamento('${a.id}')">✏</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirAgendamento('${a.id}')">🗑</button>
+        </td>
+      </tr>
+    `;
+  }).join('') : '<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum agendamento encontrado</td></tr>';
+}
+
+// ============ FINANCEIRO ============
+function salvarReceita() {
+  const desc = document.getElementById('rec-desc').value.trim();
+  const valor = parseFloat(document.getElementById('rec-valor').value);
+  if (!desc || !valor) { alert('Preencha descrição e valor!'); return; }
+
+  financeiro.push({
+    id: Date.now().toString(),
+    tipo: 'receita',
+    descricao: desc,
+    valor,
+    data: document.getElementById('rec-data').value,
+    categoria: document.getElementById('rec-categoria').value
+  });
+
+  salvarDados('financeiro', financeiro);
+  fecharModal('modal-receita');
+  renderizarFinanceiro();
+  renderizarDashboard();
+}
+
+function salvarDespesa() {
+  const desc = document.getElementById('desp-desc').value.trim();
+  const valor = parseFloat(document.getElementById('desp-valor').value);
+  if (!desc || !valor) { alert('Preencha descrição e valor!'); return; }
+
+  financeiro.push({
+    id: Date.now().toString(),
+    tipo: 'despesa',
+    descricao: desc,
+    valor,
+    data: document.getElementById('desp-data').value,
+    categoria: document.getElementById('desp-categoria').value
+  });
+
+  salvarDados('financeiro', financeiro);
+  fecharModal('modal-despesa');
+  renderizarFinanceiro();
+  renderizarDashboard();
+}
+
+function excluirFinanceiro(id) {
+  financeiro = financeiro.filter(f => f.id !== id);
+  salvarDados('financeiro', financeiro);
+  renderizarFinanceiro();
+  renderizarDashboard();
+}
+
+let filtroFinAtual = 'todos';
+
+function filtroFinanceiro(tipo, btn) {
+  filtroFinAtual = tipo;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderizarFinanceiro();
+}
+
+function renderizarFinanceiro() {
+  const receitas = financeiro.filter(f => f.tipo === 'receita').reduce((s, f) => s + f.valor, 0);
+  const despesas = financeiro.filter(f => f.tipo === 'despesa').reduce((s, f) => s + f.valor, 0);
+
+  document.getElementById('fin-receitas').textContent = formatarMoeda(receitas);
+  document.getElementById('fin-despesas').textContent = formatarMoeda(despesas);
+  document.getElementById('fin-lucro').textContent = formatarMoeda(receitas - despesas);
+
+  const lista = financeiro
+    .filter(f => filtroFinAtual === 'todos' || f.tipo === filtroFinAtual)
+    .sort((a, b) => b.data.localeCompare(a.data));
+
+  const tbody = document.getElementById('fin-tabela');
+  tbody.innerHTML = lista.length ? lista.map(f => {
+    const icones = { anuncio: '📢', transporte: '🚗', material: '📦', servico: '💅', outro: '📋' };
+    return `
+      <tr>
+        <td><span style="font-size:18px;">${f.tipo === 'receita' ? '📈' : '📉'}</span></td>
+        <td>
+          <strong>${f.descricao}</strong>
+          <div style="font-size:11px;color:var(--text-muted);">${icones[f.categoria] || '📋'} ${f.categoria || ''}</div>
+        </td>
+        <td class="finance-item-value ${f.tipo === 'receita' ? 'positive' : 'negative'}">
+          ${f.tipo === 'receita' ? '+' : '-'} ${formatarMoeda(f.valor)}
+        </td>
+        <td>${formatarData(f.data)}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="excluirFinanceiro('${f.id}')">🗑</button></td>
+      </tr>
+    `;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum registro</td></tr>';
+}
+
+// ============ DASHBOARD ============
+function renderizarDashboard() {
+  const hoje = new Date().toISOString().split('T')[0];
+  const receitas = financeiro.filter(f => f.tipo === 'receita').reduce((s, f) => s + f.valor, 0);
+  const despesas = financeiro.filter(f => f.tipo === 'despesa').reduce((s, f) => s + f.valor, 0);
+  const gastosAnuncios = financeiro.filter(f => f.tipo === 'despesa' && f.categoria === 'anuncio').reduce((s, f) => s + f.valor, 0);
+
+  document.getElementById('stat-total').textContent = clientes.length;
+  document.getElementById('stat-atendidas').textContent = clientes.filter(c => c.status === 'atendida').length;
+  document.getElementById('stat-pendentes').textContent = clientes.filter(c => c.status !== 'atendida' && c.status !== 'curiosa').length;
+  document.getElementById('stat-receita').textContent = formatarMoeda(receitas);
+  document.getElementById('stat-buscas').textContent = agendamentos.filter(a => a.data === hoje && a.tipo === 'busca').length;
+  document.getElementById('stat-entregas').textContent = agendamentos.filter(a => a.data === hoje && a.tipo === 'entrega').length;
+
+  const alicatesAbertos = agendamentos
+    .filter(a => a.status !== 'cancelado' && a.status !== 'concluido')
+    .reduce((s, a) => {
+      const cliente = clientes.find(c => c.id === a.clienteId);
+      return s + (a.quantidade || cliente?.quantidade || 1);
+    }, 0);
+  document.getElementById('stat-alicates').textContent = alicatesAbertos;
+
+  document.getElementById('stat-anuncios').textContent = formatarMoeda(gastosAnuncios);
+  document.getElementById('stat-lucro').textContent = formatarMoeda(receitas - despesas);
+
+  const proximos = agendamentos
+    .filter(a => a.data >= hoje && a.status !== 'cancelado')
+    .sort((a, b) => a.data.localeCompare(b.data) || (a.hora || '').localeCompare(b.hora || ''))
+    .slice(0, 5);
+
+  const container = document.getElementById('dashboard-events');
+  if (proximos.length) {
+    container.innerHTML = proximos.map(a => {
+      const cliente = clientes.find(c => c.id === a.clienteId);
+      const qtd = a.quantidade || cliente?.quantidade || 1;
+      const item = a.item || cliente?.item || 'Alicates';
+      const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
+      return `
+        <div class="event-item ${a.tipo}">
+          <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
+          <div class="event-details">
+            <div class="event-name">${cliente?.nome || '?'}</div>
+            <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${formatarData(a.data)}</div>
+            <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>Nenhum agendamento próximo</p></div>';
+  }
+
+  // Pagamentos Pendentes
+  const pagContainer = document.getElementById('dashboard-pagamentos');
+  const clientesComAgendamento = [...new Set(agendamentos.filter(a => a.status !== 'cancelado' && a.status !== 'concluido').map(a => a.clienteId))];
+  const pagamentosPendentes = clientesComAgendamento.map(cid => {
+    const cliente = clientes.find(c => c.id === cid);
+    const agends = agendamentos.filter(a => a.clienteId === cid && a.status !== 'cancelado' && a.status !== 'concluido');
+    const totalAlicates = agends.reduce((s, a) => s + (a.quantidade || cliente?.quantidade || 1), 0);
+    const proximaData = agends.sort((a, b) => a.data.localeCompare(b.data))[0]?.data;
+    return { cliente, agends, totalAlicates, proximaData };
+  }).filter(p => p.cliente && p.cliente.valor > 0);
+
+  const totalPendente = pagamentosPendentes.reduce((s, p) => s + (p.cliente?.valor || 0), 0);
+
+  if (pagamentosPendentes.length) {
+    pagContainer.innerHTML = `
+      <div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:600;color:var(--primary-dark);">Total a Receber</span>
+        <span style="font-size:20px;font-weight:800;color:var(--primary);">${formatarMoeda(totalPendente)}</span>
+      </div>
+      ${pagamentosPendentes.map(p => `
+        <div class="event-item" style="border-left-color:${p.cliente?.pagamento ? 'var(--success)' : 'var(--warning)'};">
+          <div class="event-time" style="color:${p.cliente?.pagamento ? 'var(--success)' : 'var(--warning)'};">
+            ${formatarMoeda(p.cliente?.valor || 0)}
+          </div>
+          <div class="event-details">
+            <div class="event-name">${p.cliente?.nome || '?'}</div>
+            <div class="event-type">
+              ${p.cliente?.pagamento ? '✅ ' + p.cliente.pagamento : '⏳ Aguardando pagamento'} · 🧴 ${p.totalAlicates} alicate${p.totalAlicates > 1 ? 's' : ''}
+            </div>
+            ${p.proximaData ? `<div class="event-type" style="margin-top:2px;">📅 Próximo: ${formatarData(p.proximaData)}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    pagContainer.innerHTML = '<div class="empty-state"><div class="icon">💰</div><p>Nenhum pagamento pendente</p></div>';
+  }
+}
+
+// ============ UTILS ============
+function formatarMoeda(v) {
+  return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function formatarData(data) {
+  if (!data) return '—';
+  const [y, m, d] = data.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ============ SYNC/SALVAR ============
+function exportarDados() {
+  const dados = { clientes, agendamentos, financeiro, exportadoEm: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'nailcontrol-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click(); URL.revokeObjectURL(url);
+  alert('Dados exportados com sucesso!');
+}
+
+function importarDados() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const dados = JSON.parse(ev.target.result);
+        if (dados.clientes) clientes = dados.clientes;
+        if (dados.agendamentos) agendamentos = dados.agendamentos;
+        if (dados.financeiro) financeiro = dados.financeiro;
+        salvarDados('clientes', clientes);
+        salvarDados('agendamentos', agendamentos);
+        salvarDados('financeiro', financeiro);
+        renderizarKanban();
+        renderizarDashboard();
+        renderizarCalendario();
+        renderizarFinanceiro();
+        renderizarTabelaAgendamentos();
+        alert('Dados importados com sucesso!');
+      } catch (err) {
+        alert('Erro ao importar dados!');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function sincronizar() {
+  if (syncAtivo && firebaseOk) {
+    dbRef.set({
+      clientes: clientes,
+      agendamentos: agendamentos,
+      financeiro: financeiro
+    }).then(() => {
+      alert('Dados sincronizados na nuvem!');
+    }).catch((error) => {
+      alert('Erro ao sincronizar: ' + error.message);
+    });
+  } else {
+    localStorage.setItem('nc_sync_backup', JSON.stringify({ clientes, agendamentos, financeiro }));
+    alert('Dados salvos localmente! (Configure Firebase para sincronizar na nuvem)');
+  }
+}
+
+// ============ INIT ============
+renderizarKanban();
+renderizarDashboard();
+
+// ============ PWA ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('data:text/javascript;base64,c2VsZnQuYWRkRXZlbnRMaXN0ZW5lcignaW5zdGFsbCcsIGUgPT4gewogIGUud2FpdEFuaW1hdGlvbigpOwp9KTs=').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
