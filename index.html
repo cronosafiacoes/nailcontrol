@@ -206,16 +206,18 @@
   /* KANBAN */
   .kanban-board {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
     margin-bottom: 28px;
   }
 
   .kanban-col {
     background: var(--bg);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 12px;
     min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
   }
 
   .kanban-header {
@@ -271,8 +273,15 @@
   .badge-pendente { background: #fef3c7; color: #92400e; }
   .badge-duvida { background: #e0e7ff; color: #3730a3; }
   .badge-curiosa { background: #f3f4f6; color: #6b7280; }
-  .badge-busca { background: #fce7f3; color: #9d174d; }
+  .badge-buscar { background: #fce7f3; color: #9d174d; }
   .badge-entrega { background: #e0f2fe; color: #075985; }
+  .badge-atendendo { background: #dbeafe; color: #1e40af; }
+  .badge-aguardando { background: #fef3c7; color: #92400e; }
+  .badge-nao-respondeu { background: #fee2e2; color: #991b1b; }
+  .badge-longe { background: #e0e7ff; color: #3730a3; }
+  .badge-levar { background: #d1fae5; color: #065f46; }
+  .badge-fechar { background: #fce7f3; color: #9d174d; }
+  .badge-entregues { background: #dcfce7; color: #166534; }
 
   .kanban-card-actions {
     display: flex; gap: 4px; position: absolute; top: 10px; right: 10px;
@@ -616,14 +625,14 @@
 
   /* RESPONSIVE - MOBILE */
   @media (max-width: 1024px) {
-    .kanban-board { grid-template-columns: repeat(2, 1fr); }
+    .kanban-board { grid-template-columns: repeat(3, 1fr); }
     .calendar-container { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 768px) {
     .sidebar { display: none; }
     .main { margin-left: 0; padding: 16px; padding-bottom: 80px; }
-    .kanban-board { grid-template-columns: 1fr; }
+    .kanban-board { grid-template-columns: repeat(2, 1fr); }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
     .page-header .btn { width: 100%; justify-content: center; }
@@ -875,27 +884,33 @@
     <div class="kanban-board" id="kanban-board">
       <div class="kanban-col">
         <div class="kanban-header">
-          <div class="kanban-title">🤝 Vai Fazer <span class="kanban-count" id="count-vai-fazer">0</span></div>
+          <div class="kanban-title">📞 Buscar <span class="kanban-count" id="count-buscar">0</span></div>
         </div>
-        <div class="kanban-cards" id="col-vai-fazer"></div>
+        <div class="kanban-cards" id="col-buscar"></div>
       </div>
       <div class="kanban-col">
         <div class="kanban-header">
-          <div class="kanban-title">🤔 Em Dúvida <span class="kanban-count" id="count-duvida">0</span></div>
+          <div class="kanban-title">💬 Atendendo <span class="kanban-count" id="count-atendendo">0</span></div>
         </div>
-        <div class="kanban-cards" id="col-duvida"></div>
+        <div class="kanban-cards" id="col-atendendo"></div>
       </div>
       <div class="kanban-col">
         <div class="kanban-header">
-          <div class="kanban-title">🔍 Só Curiosa <span class="kanban-count" id="count-curiosa">0</span></div>
+          <div class="kanban-title">⏳ Aguardando <span class="kanban-count" id="count-aguardando">0</span></div>
         </div>
-        <div class="kanban-cards" id="col-curiosa"></div>
+        <div class="kanban-cards" id="col-aguardando"></div>
       </div>
       <div class="kanban-col">
         <div class="kanban-header">
-          <div class="kanban-title">✅ Atendida <span class="kanban-count" id="count-atendida">0</span></div>
+          <div class="kanban-title">📦 Levar <span class="kanban-count" id="count-levar">0</span></div>
         </div>
-        <div class="kanban-cards" id="col-atendida"></div>
+        <div class="kanban-cards" id="col-levar"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-header">
+          <div class="kanban-title">✅ Entregues <span class="kanban-count" id="count-entregues">0</span></div>
+        </div>
+        <div class="kanban-cards" id="col-entregues"></div>
       </div>
     </div>
   </div>
@@ -1066,10 +1081,16 @@
         <div class="form-group">
           <label class="form-label">Status</label>
           <select class="form-select" id="cliente-status">
-            <option value="vai-fazer">Vai Fazer</option>
-            <option value="duvida">Em Dúvida</option>
-            <option value="curiosa">Só Curiosa</option>
-            <option value="atendida">Atendida</option>
+            <option value="buscar">📞 Buscar</option>
+            <option value="atendendo">💬 Atendendo</option>
+            <option value="vai-deixar">⏳ Vai deixar pra depois</option>
+            <option value="decidindo">🤔 Decidindo</option>
+            <option value="nao-respondeu">❌ Não Respondeu</option>
+            <option value="curiosa">🔍 Curiosas</option>
+            <option value="longe">📍 Clientes Longe</option>
+            <option value="levar">📦 Levar</option>
+            <option value="fechar-venda">📞 Chamar para Fechar venda</option>
+            <option value="entregues">✅ Entregues</option>
           </select>
         </div>
       </div>
@@ -1409,7 +1430,7 @@ function abrirModalCliente(id) {
     }
   } else {
     ['cliente-nome','cliente-telefone','cliente-endereco','cliente-quantidade','cliente-item','cliente-valor','cliente-obs'].forEach(x => document.getElementById(x).value = '');
-    document.getElementById('cliente-status').value = 'vai-fazer';
+    document.getElementById('cliente-status').value = 'buscar';
     document.getElementById('cliente-pagamento').value = '';
     document.getElementById('cliente-quantidade').value = 1;
   }
@@ -1510,17 +1531,33 @@ function excluirCliente(id) {
 function renderizarKanban() {
   const busca = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
   const colunas = {
-    'vai-fazer': clientes.filter(c => c.status === 'vai-fazer' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'duvida': clientes.filter(c => c.status === 'duvida' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'curiosa': clientes.filter(c => c.status === 'curiosa' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'atendida': clientes.filter(c => c.status === 'atendida' && (!busca || c.nome.toLowerCase().includes(busca)))
+    'buscar': clientes.filter(c => c.status === 'buscar' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'atendendo': clientes.filter(c => c.status === 'atendendo' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'aguardando': clientes.filter(c => ['vai-deixar','decidindo','nao-respondeu','curiosa','longe','fechar-venda'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
+    'levar': clientes.filter(c => c.status === 'levar' && (!busca || c.nome.toLowerCase().includes(busca))),
+    'entregues': clientes.filter(c => c.status === 'entregues' && (!busca || c.nome.toLowerCase().includes(busca)))
+  };
+
+  const statusBadges = {
+    'buscar': { label: '📞 Buscar', class: 'badge-buscar' },
+    'atendendo': { label: '💬 Atendendo', class: 'badge-atendendo' },
+    'vai-deixar': { label: '⏳ Vai deixar', class: 'badge-aguardando' },
+    'decidindo': { label: '🤔 Decidindo', class: 'badge-aguardando' },
+    'nao-respondeu': { label: '❌ Não respondeu', class: 'badge-nao-respondeu' },
+    'curiosa': { label: '🔍 Curiosa', class: 'badge-curiosa' },
+    'longe': { label: '📍 Longe', class: 'badge-longe' },
+    'levar': { label: '📦 Levar', class: 'badge-levar' },
+    'fechar-venda': { label: '📞 Fechar venda', class: 'badge-fechar' },
+    'entregues': { label: '✅ Entregue', class: 'badge-entregues' }
   };
 
   Object.keys(colunas).forEach(col => {
     const container = document.getElementById('col-' + col);
     const count = document.getElementById('count-' + col);
     count.textContent = colunas[col].length;
-    container.innerHTML = colunas[col].length ? colunas[col].map(c => `
+    container.innerHTML = colunas[col].length ? colunas[col].map(c => {
+      const badge = statusBadges[c.status] || { label: c.status, class: '' };
+      return `
       <div class="kanban-card" onclick="abrirModalCliente('${c.id}')">
         <div class="kanban-card-actions">
           <button onclick="event.stopPropagation();excluirCliente('${c.id}')" title="Excluir">🗑</button>
@@ -1530,10 +1567,11 @@ function renderizarKanban() {
         ${c.item ? `<div class="kanban-card-info">🧴 ${c.item}${c.quantidade > 1 ? ' (x' + c.quantidade + ')' : ''}</div>` : ''}
         ${c.endereco ? `<div class="kanban-card-info">📍 ${c.endereco}</div>` : ''}
         ${c.valor ? `<div class="kanban-card-info">💰 R$ ${c.valor.toFixed(2)}</div>` : ''}
-        ${c.pagamento ? `<span class="kanban-card-badge badge-${c.status === 'atendida' ? 'pago' : 'pendente'}">${c.pagamento}</span>` : ''}
+        <span class="kanban-card-badge ${badge.class}">${badge.label}</span>
         ${c.obs ? `<div class="kanban-card-info" style="margin-top:4px;font-style:italic;">💬 ${c.obs}</div>` : ''}
       </div>
-    `).join('') : '<div class="empty-state"><p>Nenhuma cliente</p></div>';
+    `;
+    }).join('') : '<div class="empty-state"><p>Nenhuma cliente</p></div>';
   });
 }
 
@@ -1904,8 +1942,8 @@ function renderizarDashboard() {
   const gastosAnuncios = financeiro.filter(f => f.tipo === 'despesa' && f.categoria === 'anuncio').reduce((s, f) => s + f.valor, 0);
 
   document.getElementById('stat-total').textContent = clientes.length;
-  document.getElementById('stat-atendidas').textContent = clientes.filter(c => c.status === 'atendida').length;
-  document.getElementById('stat-pendentes').textContent = clientes.filter(c => c.status !== 'atendida' && c.status !== 'curiosa').length;
+  document.getElementById('stat-atendidas').textContent = clientes.filter(c => c.status === 'entregues').length;
+  document.getElementById('stat-pendentes').textContent = clientes.filter(c => c.status !== 'entregues').length;
   document.getElementById('stat-receita').textContent = formatarMoeda(receitas);
   document.getElementById('stat-buscas').textContent = agendamentos.filter(a => a.data === hoje && a.tipo === 'busca').length;
   document.getElementById('stat-entregas').textContent = agendamentos.filter(a => a.data === hoje && a.tipo === 'entrega').length;
