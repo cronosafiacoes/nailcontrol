@@ -1532,8 +1532,8 @@ function renderizarKanban() {
   const busca = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
   const colunas = {
     'buscar': clientes.filter(c => c.status === 'buscar' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'atendendo': clientes.filter(c => c.status === 'atendendo' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'aguardando': clientes.filter(c => ['vai-deixar','decidindo','nao-respondeu','curiosa','longe','fechar-venda'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
+    'atendendo': clientes.filter(c => ['atendendo','fechar-venda'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
+    'aguardando': clientes.filter(c => ['vai-deixar','decidindo','nao-respondeu','curiosa','longe'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
     'levar': clientes.filter(c => c.status === 'levar' && (!busca || c.nome.toLowerCase().includes(busca))),
     'entregues': clientes.filter(c => c.status === 'entregues' && (!busca || c.nome.toLowerCase().includes(busca)))
   };
