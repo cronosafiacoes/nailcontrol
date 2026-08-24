@@ -402,7 +402,7 @@
     transition: all 0.2s;
   }
 
-  .event-item:hover { box-shadow: var(--shadow-hover); }
+  .event-item:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
   .event-item.entrega { border-left-color: var(--info); }
 
   .event-time {
@@ -1676,16 +1676,22 @@ function selecionarDia(dateStr) {
     return;
   }
 
-  container.innerHTML = eventos.map(a => {
+  const eventosOrdenados = [...eventos].sort((a, b) => {
+    const horaA = a.hora && a.hora.includes(' - ') ? a.hora.split(' - ')[0] : (a.hora || '99:99');
+    const horaB = b.hora && b.hora.includes(' - ') ? b.hora.split(' - ')[0] : (b.hora || '99:99');
+    return horaA.localeCompare(horaB);
+  });
+
+  container.innerHTML = eventosOrdenados.map(a => {
     const cliente = clientes.find(c => c.id === a.clienteId);
     const qtd = a.quantidade || cliente?.quantidade || 1;
     const item = a.item || cliente?.item || 'Alicates';
     const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
     return `
-      <div class="event-item ${a.tipo}">
+      <div class="event-item ${a.tipo}" style="cursor:pointer;" onclick="abrirModalCliente('${a.clienteId}')" title="Clique para editar ${cliente?.nome || 'cliente'}">
         <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
         <div class="event-details">
-          <div class="event-name">${cliente?.nome || 'Cliente'}</div>
+          <div class="event-name">${cliente?.nome || 'Cliente'} <span style="font-size:11px;color:var(--text-muted);">✏️</span></div>
           <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${a.status === 'concluido' ? '✅ Concluído' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente'}</div>
           <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
         </div>
@@ -1972,10 +1978,10 @@ function renderizarDashboard() {
       const item = a.item || cliente?.item || 'Alicates';
       const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
       return `
-        <div class="event-item ${a.tipo}">
+        <div class="event-item ${a.tipo}" style="cursor:pointer;" onclick="abrirModalCliente('${a.clienteId}')" title="Clique para editar ${cliente?.nome || 'cliente'}">
           <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
           <div class="event-details">
-            <div class="event-name">${cliente?.nome || '?'}</div>
+            <div class="event-name">${cliente?.nome || '?'} <span style="font-size:11px;color:var(--text-muted);">✏️</span></div>
             <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${formatarData(a.data)}</div>
             <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
           </div>
