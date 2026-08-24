@@ -1688,12 +1688,16 @@ function selecionarDia(dateStr) {
     const item = a.item || cliente?.item || 'Alicates';
     const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
     return `
-      <div class="event-item ${a.tipo}" style="cursor:pointer;" onclick="abrirModalCliente('${a.clienteId}')" title="Clique para editar ${cliente?.nome || 'cliente'}">
+      <div class="event-item ${a.tipo}">
         <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
-        <div class="event-details">
-          <div class="event-name">${cliente?.nome || 'Cliente'} <span style="font-size:11px;color:var(--text-muted);">✏️</span></div>
+        <div class="event-details" style="cursor:pointer;flex:1;" onclick="abrirModalCliente('${a.clienteId}')" title="Editar cliente">
+          <div class="event-name">${cliente?.nome || 'Cliente'}</div>
           <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${a.status === 'concluido' ? '✅ Concluído' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente'}</div>
           <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button class="btn btn-sm btn-outline" onclick="abrirModalAgendamento('${a.id}')" title="Editar agendamento" style="padding:4px 8px;font-size:11px;">✏️</button>
+          ${a.status !== 'concluido' ? `<button class="btn btn-sm btn-success" onclick="concluirAgendamento('${a.id}')" title="Concluir" style="padding:4px 8px;font-size:11px;">✓</button>` : ''}
         </div>
       </div>
     `;
@@ -1978,13 +1982,14 @@ function renderizarDashboard() {
       const item = a.item || cliente?.item || 'Alicates';
       const horaFormatada = a.hora && a.hora.includes(' - ') ? `🕐 ${a.hora}` : a.hora || '--:--';
       return `
-        <div class="event-item ${a.tipo}" style="cursor:pointer;" onclick="abrirModalCliente('${a.clienteId}')" title="Clique para editar ${cliente?.nome || 'cliente'}">
+        <div class="event-item ${a.tipo}">
           <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
-          <div class="event-details">
-            <div class="event-name">${cliente?.nome || '?'} <span style="font-size:11px;color:var(--text-muted);">✏️</span></div>
+          <div class="event-details" style="cursor:pointer;flex:1;" onclick="abrirModalCliente('${a.clienteId}')" title="Editar cliente">
+            <div class="event-name">${cliente?.nome || '?'}</div>
             <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${formatarData(a.data)}</div>
             <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
           </div>
+          <button class="btn btn-sm btn-outline" onclick="abrirModalAgendamento('${a.id}')" title="Editar agendamento" style="padding:4px 8px;font-size:11px;flex-shrink:0;">✏️</button>
         </div>
       `;
     }).join('');
