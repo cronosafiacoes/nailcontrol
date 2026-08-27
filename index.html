@@ -1062,6 +1062,16 @@
         <h3>💰 Lucro Líquido</h3>
         <div class="finance-big" style="color:var(--primary);" id="fin-lucro">R$ 0,00</div>
       </div>
+      <div class="finance-card" style="border-left:4px solid var(--info);">
+        <h3>🔮 A Receber</h3>
+        <div class="finance-big" style="color:var(--info);" id="fin-areceber">R$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Valores a Receber -->
+    <div class="card" style="margin-bottom:24px;">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">🔮 Valores a Receber (Agendamentos Futuros)</h3>
+      <div id="fin-areceber-lista"></div>
     </div>
 
     <div class="table-container">
@@ -2055,6 +2065,41 @@ function renderizarFinanceiro() {
   document.getElementById('fin-receitas').textContent = formatarMoeda(receitas);
   document.getElementById('fin-despesas').textContent = formatarMoeda(despesas);
   document.getElementById('fin-lucro').textContent = formatarMoeda(receitas - despesas);
+
+  const hoje = new Date().toISOString().split('T')[0];
+  const entregasFuturas = agendamentos.filter(a =>
+    a.tipo === 'entrega' &&
+    a.status !== 'concluido' &&
+    a.status !== 'cancelado' &&
+    a.data >= hoje
+  );
+  const totalAReceber = entregasFuturas.reduce((s, a) => {
+    const cliente = clientes.find(c => c.id === a.clienteId);
+    return s + (a.valor || 0);
+  }, 0);
+  document.getElementById('fin-areceber').textContent = formatarMoeda(totalAReceber);
+
+  const containerAreceber = document.getElementById('fin-areceber-lista');
+  if (entregasFuturas.length) {
+    containerAreceber.innerHTML = entregasFuturas
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .map(a => {
+        const cliente = clientes.find(c => c.id === a.clienteId);
+        const qtd = a.quantidade || cliente?.quantidade || 1;
+        return `
+          <div class="event-item" style="border-left-color:var(--info);">
+            <div class="event-time" style="color:var(--info);">${formatarData(a.data)}</div>
+            <div class="event-details" style="flex:1;">
+              <div class="event-name">${cliente?.nome || '?'}</div>
+              <div class="event-type">📥 Entrega · ${qtd} alicate${qtd > 1 ? 's' : ''}</div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:var(--info);">${formatarMoeda(a.valor || 0)}</div>
+          </div>
+        `;
+      }).join('');
+  } else {
+    containerAreceber.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">Nenhuma entrega futura</div>';
+  }
 
   const lista = financeiro
     .filter(f => filtroFinAtual === 'todos' || f.tipo === filtroFinAtual)
