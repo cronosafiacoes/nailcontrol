@@ -467,6 +467,75 @@
   .finance-item-value.positive { color: var(--success); }
   .finance-item-value.negative { color: var(--danger); }
 
+  /* RELATÓRIOS */
+  .report-filters {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .report-filters label { font-weight: 600; font-size: 13px; color: var(--text-muted); }
+
+  .report-filters input, .report-filters select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--bg);
+  }
+
+  .report-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .report-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .report-card h4 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .report-card .value { font-size: 24px; font-weight: 800; }
+  .report-card .value.green { color: var(--success); }
+  .report-card .value.red { color: var(--danger); }
+  .report-card .value.pink { color: var(--primary); }
+  .report-card .value.purple { color: var(--secondary); }
+
+  .category-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .category-bar:last-child { border-bottom: none; }
+
+  .category-bar .label { font-size: 13px; font-weight: 600; min-width: 100px; }
+
+  .category-bar .bar-bg {
+    flex: 1; height: 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .category-bar .bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+  }
+
+  .category-bar .amount { font-size: 13px; font-weight: 700; min-width: 80px; text-align: right; }
+
   /* TABLE */
   .table-container {
     background: var(--card);
@@ -1014,8 +1083,42 @@
             <th></th>
           </tr>
         </thead>
-        <tbody id="fin-tabela"></tbody>
+        <tbody id="fin-tabela">        </tbody>
       </table>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div style="margin-top:32px;">
+      <h2 style="font-size:20px;font-weight:800;margin-bottom:16px;">📊 Relatórios</h2>
+
+      <div class="report-filters">
+        <label>Período:</label>
+        <select id="report-periodo" onchange="gerarRelatorio()">
+          <option value="hoje">Hoje</option>
+          <option value="semana">Esta Semana</option>
+          <option value="mes" selected>Este Mês</option>
+          <option value="trimestre">Último Trimestre</option>
+          <option value="ano">Este Ano</option>
+          <option value="personalizado">Personalizado</option>
+        </select>
+        <div id="report-datas" style="display:none;">
+          <input type="date" id="report-data-inicio" onchange="gerarRelatorio()">
+          <span style="color:var(--text-muted);">até</span>
+          <input type="date" id="report-data-fim" onchange="gerarRelatorio()">
+        </div>
+      </div>
+
+      <div class="report-summary" id="report-summary"></div>
+
+      <div class="card" style="margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">📂 Gastos por Categoria</h3>
+        <div id="report-categorias"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">📈 Comparativo Mensal</h3>
+        <div id="report-mensal"></div>
+      </div>
     </div>
   </div>
 
@@ -1199,6 +1302,10 @@
           <label class="form-label">O que vai gravar?</label>
           <input type="text" class="form-input" id="agend-item" placeholder="Ex: Alicate rosa, alicate adorned...">
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (R$)</label>
+        <input type="number" class="form-input" id="agend-valor" step="0.01" placeholder="0,00">
       </div>
       <div class="form-group">
         <label class="form-label">Observações</label>
@@ -1394,7 +1501,7 @@ function navegarPara(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   if (page === 'calendario') renderizarCalendario();
-  if (page === 'financeiro') renderizarFinanceiro();
+  if (page === 'financeiro') { renderizarFinanceiro(); gerarRelatorio(); }
   if (page === 'agendamentos') renderizarTabelaAgendamentos();
   if (page === 'dashboard') renderizarDashboard();
   window.scrollTo(0, 0);
@@ -1456,6 +1563,7 @@ function abrirModalAgendamento(id) {
       document.getElementById('agend-endereco').value = a.endereco || '';
       document.getElementById('agend-quantidade').value = a.quantidade || 1;
       document.getElementById('agend-item').value = a.item || '';
+      document.getElementById('agend-valor').value = a.valor || '';
       document.getElementById('agend-obs').value = a.obs || '';
     }
   } else {
@@ -1466,6 +1574,7 @@ function abrirModalAgendamento(id) {
     document.getElementById('agend-endereco').value = '';
     document.getElementById('agend-quantidade').value = 1;
     document.getElementById('agend-item').value = '';
+    document.getElementById('agend-valor').value = '';
     document.getElementById('agend-obs').value = '';
     document.getElementById('agend-criar-entrega').checked = true;
     mostrarOpcaoEntrega();
@@ -1712,6 +1821,7 @@ function preencherAgendamentoCliente() {
     document.getElementById('agend-item').value = cliente.item || '';
     document.getElementById('agend-quantidade').value = cliente.quantidade || 1;
     document.getElementById('agend-endereco').value = cliente.endereco || '';
+    document.getElementById('agend-valor').value = cliente.valor || '';
   }
 }
 
@@ -1768,6 +1878,7 @@ function salvarAgendamento() {
     endereco: document.getElementById('agend-endereco').value || cliente?.endereco || '',
     quantidade: parseInt(document.getElementById('agend-quantidade').value) || 1,
     item: document.getElementById('agend-item').value.trim(),
+    valor: parseFloat(document.getElementById('agend-valor').value) || 0,
     obs: document.getElementById('agend-obs').value.trim()
   };
 
@@ -1793,6 +1904,7 @@ function salvarAgendamento() {
           endereco: dados.endereco,
           quantidade: dados.quantidade,
           item: dados.item,
+          valor: dados.valor,
           obs: dados.obs
         });
       }
@@ -1816,11 +1928,35 @@ function excluirAgendamento(id) {
 }
 
 function concluirAgendamento(id) {
+  const agendamento = agendamentos.find(a => a.id === id);
+  if (!agendamento) return;
+
   agendamentos = agendamentos.map(a => a.id === id ? {...a, status: 'concluido'} : a);
   salvarDados('agendamentos', agendamentos);
+
+  if (agendamento.tipo === 'entrega') {
+    const cliente = clientes.find(c => c.id === agendamento.clienteId);
+    const qtd = agendamento.quantidade || cliente?.quantidade || 1;
+    const valorTotal = agendamento.valor || 0;
+
+    if (valorTotal > 0) {
+      financeiro.push({
+        id: Date.now().toString(),
+        tipo: 'receita',
+        descricao: `Entrega: ${cliente?.nome || 'Cliente'} - ${qtd} alicate${qtd > 1 ? 's' : ''}`,
+        valor: valorTotal,
+        data: new Date().toISOString().split('T')[0],
+        categoria: 'servico'
+      });
+      salvarDados('financeiro', financeiro);
+    }
+  }
+
   renderizarCalendario();
   renderizarDashboard();
   renderizarTabelaAgendamentos();
+  renderizarFinanceiro();
+  gerarRelatorio();
 }
 
 function renderizarTabelaAgendamentos() {
@@ -1942,6 +2078,123 @@ function renderizarFinanceiro() {
       </tr>
     `;
   }).join('') : '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhum registro</td></tr>';
+}
+
+// ============ RELATÓRIOS ============
+function gerarRelatorio() {
+  const periodo = document.getElementById('report-periodo').value;
+  const dataInput = document.getElementById('report-datas');
+  dataInput.style.display = periodo === 'personalizado' ? 'flex' : 'none';
+
+  const hoje = new Date();
+  const hojeStr = hoje.toISOString().split('T')[0];
+  let inicio, fim;
+
+  if (periodo === 'hoje') {
+    inicio = fim = hojeStr;
+  } else if (periodo === 'semana') {
+    const primeiroDia = new Date(hoje);
+    primeiroDia.setDate(hoje.getDate() - hoje.getDay());
+    inicio = primeiroDia.toISOString().split('T')[0];
+    fim = hojeStr;
+  } else if (periodo === 'mes') {
+    inicio = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-01';
+    fim = hojeStr;
+  } else if (periodo === 'trimestre') {
+    const tresMesesAtras = new Date(hoje);
+    tresMesesAtras.setMonth(hoje.getMonth() - 3);
+    inicio = tresMesesAtras.toISOString().split('T')[0];
+    fim = hojeStr;
+  } else if (periodo === 'ano') {
+    inicio = hoje.getFullYear() + '-01-01';
+    fim = hojeStr;
+  } else if (periodo === 'personalizado') {
+    inicio = document.getElementById('report-data-inicio').value;
+    fim = document.getElementById('report-data-fim').value;
+    if (!inicio || !fim) return;
+  }
+
+  const dados = financeiro.filter(f => f.data >= inicio && f.data <= fim);
+  const receitas = dados.filter(f => f.tipo === 'receita').reduce((s, f) => s + f.valor, 0);
+  const despesas = dados.filter(f => f.tipo === 'despesa').reduce((s, f) => s + f.valor, 0);
+  const lucro = receitas - despesas;
+  const ticketMedio = dados.filter(f => f.tipo === 'receita').length > 0
+    ? receitas / dados.filter(f => f.tipo === 'receita').length : 0;
+
+  document.getElementById('report-summary').innerHTML = `
+    <div class="report-card"><h4>Receitas</h4><div class="value green">${formatarMoeda(receitas)}</div></div>
+    <div class="report-card"><h4>Despesas</h4><div class="value red">${formatarMoeda(despesas)}</div></div>
+    <div class="report-card"><h4>Lucro Líquido</h4><div class="value pink">${formatarMoeda(lucro)}</div></div>
+    <div class="report-card"><h4>Ticket Médio</h4><div class="value purple">${formatarMoeda(ticketMedio)}</div></div>
+  `;
+
+  const categorias = {};
+  dados.filter(f => f.tipo === 'despesa').forEach(f => {
+    const cat = f.categoria || 'outro';
+    categorias[cat] = (categorias[cat] || 0) + f.valor;
+  });
+
+  const catIcons = { anuncio: '📢', transporte: '🚗', material: '📦', servico: '💅', outro: '📋' };
+  const catNomes = { anuncio: 'Anúncios', transporte: 'Transporte', material: 'Material', servico: 'Serviço', outro: 'Outro' };
+  const maxCat = Math.max(...Object.values(categorias), 1);
+  const cores = ['#e91e90', '#7c3aed', '#10b981', '#f59e0b', '#3b82f6'];
+
+  const catContainer = document.getElementById('report-categorias');
+  if (Object.keys(categorias).length) {
+    catContainer.innerHTML = Object.entries(categorias)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, valor], i) => `
+        <div class="category-bar">
+          <div class="label">${catIcons[cat] || '📋'} ${catNomes[cat] || cat}</div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${(valor / maxCat) * 100}%;background:${cores[i % cores.length]};"></div></div>
+          <div class="amount">${formatarMoeda(valor)}</div>
+        </div>
+      `).join('');
+  } else {
+    catContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Nenhuma despesa no período</div>';
+  }
+
+  const meses = {};
+  dados.forEach(f => {
+    const mes = f.data.substring(0, 7);
+    if (!meses[mes]) meses[mes] = { receitas: 0, despesas: 0 };
+    if (f.tipo === 'receita') meses[mes].receitas += f.valor;
+    else meses[mes].despesas += f.valor;
+  });
+
+  const mesContainer = document.getElementById('report-mensal');
+  const mesesSorted = Object.keys(meses).sort().slice(-6);
+  if (mesesSorted.length) {
+    const maxMes = Math.max(...mesesesSorted.map(m => Math.max(meses[m].receitas, meses[m].despesas)), 1);
+    mesContainer.innerHTML = mesesSorted.map(m => {
+      const r = meses[m].receitas;
+      const d = meses[m].despesas;
+      const nomeMes = new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="min-width:60px;font-size:13px;font-weight:600;text-transform:capitalize;">${nomeMes}</div>
+          <div style="flex:1;">
+            <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--success);"></div>
+              <div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden;">
+                <div style="width:${(r / maxMes) * 100}%;height:100%;background:var(--success);border-radius:5px;"></div>
+              </div>
+              <span style="font-size:11px;color:var(--success);font-weight:600;">${formatarMoeda(r)}</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--danger);"></div>
+              <div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden;">
+                <div style="width:${(d / maxMes) * 100}%;height:100%;background:var(--danger);border-radius:5px;"></div>
+              </div>
+              <span style="font-size:11px;color:var(--danger);font-weight:600;">${formatarMoeda(d)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    mesContainer.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Sem dados no período</div>';
+  }
 }
 
 // ============ DASHBOARD ============
