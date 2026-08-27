@@ -2342,7 +2342,12 @@ function formatarMoeda(v) {
 function formatarData(data) {
   if (!data) return '—';
   const [y, m, d] = data.split('-');
-  return `${d}/${m}/${y}`;
+  const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const dataObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  const diaSemana = dias[dataObj.getDay()];
+  const nomeMes = meses[parseInt(m) - 1];
+  return `${diaSemana}, ${d}/${m}/${y} - ${nomeMes}`;
 }
 
 // ============ SYNC/SALVAR ============
