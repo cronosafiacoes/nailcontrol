@@ -2067,38 +2067,37 @@ function renderizarFinanceiro() {
   document.getElementById('fin-lucro').textContent = formatarMoeda(receitas - despesas);
 
   const hoje = new Date().toISOString().split('T')[0];
-  const entregasFuturas = agendamentos.filter(a =>
-    a.tipo === 'entrega' &&
+  const pendentes = agendamentos.filter(a =>
     a.status !== 'concluido' &&
-    a.status !== 'cancelado' &&
-    a.data >= hoje
+    a.status !== 'cancelado'
   );
-  const totalAReceber = entregasFuturas.reduce((s, a) => {
-    const cliente = clientes.find(c => c.id === a.clienteId);
-    return s + (a.valor || 0);
-  }, 0);
+
+  const totalAReceber = pendentes.reduce((s, a) => s + (a.valor || 0), 0);
   document.getElementById('fin-areceber').textContent = formatarMoeda(totalAReceber);
 
   const containerAreceber = document.getElementById('fin-areceber-lista');
-  if (entregasFuturas.length) {
-    containerAreceber.innerHTML = entregasFuturas
+  if (pendentes.length) {
+    containerAreceber.innerHTML = pendentes
       .sort((a, b) => a.data.localeCompare(b.data))
       .map(a => {
         const cliente = clientes.find(c => c.id === a.clienteId);
         const qtd = a.quantidade || cliente?.quantidade || 1;
+        const icone = a.tipo === 'entrega' ? '📥' : '📤';
+        const tipoLabel = a.tipo === 'entrega' ? 'Entrega' : 'Coleta';
+        const cor = a.tipo === 'entrega' ? 'var(--info)' : 'var(--warning)';
         return `
-          <div class="event-item" style="border-left-color:var(--info);">
-            <div class="event-time" style="color:var(--info);">${formatarData(a.data)}</div>
+          <div class="event-item" style="border-left-color:${cor};">
+            <div class="event-time" style="color:${cor};">${formatarData(a.data)}</div>
             <div class="event-details" style="flex:1;">
               <div class="event-name">${cliente?.nome || '?'}</div>
-              <div class="event-type">📥 Entrega · ${qtd} alicate${qtd > 1 ? 's' : ''}</div>
+              <div class="event-type">${icone} ${tipoLabel} · ${qtd} alicate${qtd > 1 ? 's' : ''}</div>
             </div>
-            <div style="font-weight:700;font-size:14px;color:var(--info);">${formatarMoeda(a.valor || 0)}</div>
+            <div style="font-weight:700;font-size:14px;color:${cor};">${formatarMoeda(a.valor || 0)}</div>
           </div>
         `;
       }).join('');
   } else {
-    containerAreceber.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">Nenhuma entrega futura</div>';
+    containerAreceber.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">Nenhum agendamento pendente</div>';
   }
 
   const lista = financeiro
