@@ -1440,13 +1440,54 @@ let diaSelecionado = new Date();
 let syncAtivo = false;
 
 // Carregar dados do Firebase
+// Normaliza dados vindos do Firebase para arrays.
+// O Firebase pode guardar as coleções como ARRAY (quando salvas pelo salvarDados/.set)
+// OU como OBJETO com chave automática (quando recebidas via POST do fluxo do WhatsApp,
+// ex: agendamentos = {"-NXabc": {...} }). O restante do código espera arrays, então
+// convertemos objetos em arrays na carga.
+function normalizarColecao(dados, campoIdDefault) {
+  if (!dados) return [];
+  if (Array.isArray(dados)) return dados;
+  if (typeof dados === 'object') {
+    return Object.entries(dados).map(([chave, item]) => {
+      if (item === null || typeof item !== 'object') return null;
+      // A chave gerada pelo Firebase vira o id caso o item não tenha id próprio
+      if (item.id === undefined || item.id === null || item.id === '') {
+        item.id = chave;
+      }
+      return item;
+    }).filter(Boolean);
+  }
+  return [];
+}
+
+// Garante que cada item tenha um "id" único e um "clienteId" coerente.
+// Agendamentos criados pelo fluxo do WhatsApp chegam sem clienteId (só têm "nome",
+// "data", "hora", "endereco", "quantidade", "bairro"); aqui ligamos ao cliente que
+// tiver o mesmo nome, quando possível, para continuarem aparecendo no calendário.
+function normalizarAgendamentos(lista) {
+  return lista.map(a => {
+    if (typeof a !== 'object' || a === null) return null;
+    if (!a.id) a.id = (a.chave || 'agend') + '_' + (Date.now() + Math.random()).toString();
+    if (!a.clienteId) {
+      const achado = clientes.find(c =>
+        c.nome && a.nome && String(c.nome).trim().toLowerCase() === String(a.nome).trim().toLowerCase()
+      );
+      if (achado) a.clienteId = achado.id;
+    }
+    return a;
+  }).filter(Boolean);
+}
+
 function carregarDadosFirebase() {
   dbRef.on('value', (snapshot) => {
     const dados = snapshot.val();
     if (dados) {
-      clientes = dados.clientes || [];
-      agendamentos = dados.agendamentos || [];
-      financeiro = dados.financeiro || [];
+      if (dados.clientes) clientes = normalizarColecao(dados.clientes, 'id');
+      if (dados.agendamentos) agendamentos = normalizarAgendamentos(normalizarColecao(dados.agendamentos, 'id'));
+      else agendamentos = [];
+      if (dados.financeiro) financeiro = normalizarColecao(dados.financeiro, 'id');
+      else financeiro = [];
       syncAtivo = true;
       document.getElementById('sync-status').textContent = '🟢 Online';
       document.getElementById('sync-status').style.color = 'var(--success)';
@@ -2410,8 +2451,9 @@ function importarDados() {
     reader.onload = (ev) => {
       try {
         const dados = JSON.parse(ev.target.result);
-        if (dados.clientes) clientes = dados.clientes;
-        if (dados.agendamentos) agendamentos = dados.agendamentos;
+        if (dados.clientes) clientes = normalizarColecao(dados.clientes, 'id');
+        if (dados.agendamentos) agendamentos = normalizarAgendamentos(normalizarColecao(dados.agendamentos, 'id'));
+        else agendamentos = [];
         if (dados.financeiro) financeiro = dados.financeiro;
         salvarDados('clientes', clientes);
         salvarDados('agendamentos', agendamentos);
