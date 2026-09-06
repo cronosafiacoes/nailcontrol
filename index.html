@@ -1854,7 +1854,7 @@ function selecionarDia(dateStr) {
       <div class="event-item ${a.tipo}">
         <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
         <div class="event-details" style="cursor:pointer;flex:1;" onclick="abrirModalCliente('${a.clienteId}')" title="Editar cliente">
-          <div class="event-name">${cliente?.nome || 'Cliente'}</div>
+          <div class="event-name">${cliente?.nome || a.nome || 'Cliente'}</div>
           <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${a.status === 'concluido' ? '✅ Concluído' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente'}</div>
           <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
         </div>
@@ -2026,7 +2026,7 @@ function renderizarTabelaAgendamentos() {
     const item = a.item || cliente?.item || '—';
     return `
       <tr>
-        <td><strong>${cliente?.nome || '?'}</strong></td>
+        <td><strong>${cliente?.nome || a.nome || '?'}</strong></td>
         <td>${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'}</td>
         <td>${item}</td>
         <td><strong style="color:var(--primary);">${qtd}</strong></td>
@@ -2133,7 +2133,7 @@ function renderizarFinanceiro() {
           <div class="event-item" style="border-left-color:${cor};">
             <div class="event-time" style="color:${cor};">${formatarData(a.data)}</div>
             <div class="event-details" style="flex:1;">
-              <div class="event-name">${cliente?.nome || '?'}</div>
+              <div class="event-name">${cliente?.nome || a.nome || '?'}</div>
               <div class="event-type">${icone} ${tipoLabel} · ${qtd} alicate${qtd > 1 ? 's' : ''}</div>
             </div>
             <div style="font-weight:700;font-size:14px;color:${cor};">${formatarMoeda(a.valor || 0)}</div>
@@ -2326,7 +2326,7 @@ function renderizarDashboard() {
         <div class="event-item ${a.tipo}">
           <div class="event-time" style="min-width:${a.hora && a.hora.includes(' - ') ? '100px' : '50px'};font-size:${a.hora && a.hora.includes(' - ') ? '11px' : '12px'};">${horaFormatada}</div>
           <div class="event-details" style="cursor:pointer;flex:1;" onclick="abrirModalCliente('${a.clienteId}')" title="Editar cliente">
-            <div class="event-name">${cliente?.nome || '?'}</div>
+            <div class="event-name">${cliente?.nome || a.nome || '?'}</div>
             <div class="event-type">${a.tipo === 'busca' ? '📤 Coleta' : '📥 Entrega'} · ${formatarData(a.data)}</div>
             <div class="event-type" style="margin-top:2px;">🧴 ${item} <strong style="color:var(--primary);">(x${qtd})</strong></div>
           </div>
@@ -2400,7 +2400,7 @@ function renderizarDashboard() {
           <div class="event-item" style="border-left-color:${cor};">
             <div class="event-time" style="color:${cor};">${formatarData(a.data)}</div>
             <div class="event-details" style="flex:1;">
-              <div class="event-name">${cliente?.nome || '?'}</div>
+              <div class="event-name">${cliente?.nome || a.nome || '?'}</div>
               <div class="event-type">${icone} ${tipoLabel} · ${qtd} alicate${qtd > 1 ? 's' : ''}</div>
             </div>
             <div style="font-weight:700;font-size:14px;color:${cor};">${formatarMoeda(a.valor || 0)}</div>
