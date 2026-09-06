@@ -219,7 +219,7 @@
 
       renderizar([]);
 
-      db.ref('agendamentos').once('value').then(function(snapshot) {
+      db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
         var ocupados = [];
         var val = snapshot.val();
         if (val) {
@@ -274,7 +274,7 @@
         criadoEm: new Date().toISOString()
       };
 
-      db.ref('agendamentos/' + novoAgendamento.id).set(novoAgendamento)
+      db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento)
         .then(function() {
           var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
           var dataFormatada = formatarData(dataSelecionada);
