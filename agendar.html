@@ -297,10 +297,12 @@
                 '<div class="icon">✅</div>' +
                 '<h2>Agendamento Confirmado!</h2>' +
                 '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
-                '<a href="https://api.whatsapp.com/send?phone=5531989390637&text=' + msg + '" target="_blank" class="btn-agendar" style="text-decoration:none;display:inline-block;margin-bottom:12px;">Enviar no WhatsApp</a>' +
+                '<p style="color:var(--success);font-weight:600;">Mensagem enviada no WhatsApp!</p>' +
                 '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
               '</div>' +
             '</div>';
+
+          window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + msg, '_blank');
         })
         .catch(function(error) {
           alert('Erro ao agendar. Tente novamente.');
