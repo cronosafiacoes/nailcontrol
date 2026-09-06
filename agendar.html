@@ -121,13 +121,13 @@
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyB9eQzS-S0QS-S0QS-S0QS-S0QS-S0QS",
+      apiKey: "AIzaSyBBERqs003HKOlIX_q5h7O7DywO7jwlGhI",
       authDomain: "nailcontrol-21607.firebaseapp.com",
       databaseURL: "https://nailcontrol-21607-default-rtdb.firebaseio.com",
       projectId: "nailcontrol-21607",
       storageBucket: "nailcontrol-21607.firebasestorage.app",
-      messagingSenderId: "584330953584",
-      appId: "1:584330953584:web:055be7d6b95dbae491bd04"
+      messagingSenderId: "493642925848",
+      appId: "1:493642925848:web:2ed04dd98fad3edebe806d"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -205,9 +205,16 @@
 
       db.ref('agendamentos').on('value', function(snapshot) {
         agendamentos = [];
-        snapshot.forEach(function(child) {
-          agendamentos.push(child.val());
-        });
+        var val = snapshot.val();
+        if (val) {
+          if (Array.isArray(val)) {
+            agendamentos = val.filter(function(a) { return a != null; });
+          } else {
+            Object.keys(val).forEach(function(key) {
+              if (val[key] != null) agendamentos.push(val[key]);
+            });
+          }
+        }
 
         const ocupados = agendamentos
           .filter(function(a) { return a.data === dataSelecionada && a.tipo === tipoServico && a.status !== 'cancelado'; })
