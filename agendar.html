@@ -278,13 +278,27 @@
         .then(function() {
           var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
           var dataFormatada = formatarData(dataSelecionada);
+
+          var msg = encodeURIComponent(
+            ' nailControl - Novo Agendamento!\n\n' +
+            tipoLabel + '\n' +
+            'Data: ' + dataFormatada + '\n' +
+            'Horário: ' + horarioSelecionado + '\n\n' +
+            'Cliente: ' + nome + '\n' +
+            'Telefone: ' + telefone + '\n' +
+            'Endereço: ' + (endereco || 'Não informado') + '\n' +
+            'Item: ' + (item || 'Alicate') + '\n' +
+            'Quantidade: ' + (quantidade || 1)
+          );
+
           document.getElementById('form-agendamento').innerHTML =
             '<div class="card">' +
               '<div class="success-message">' +
                 '<div class="icon">✅</div>' +
                 '<h2>Agendamento Confirmado!</h2>' +
                 '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
-                '<button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
+                '<a href="https://api.whatsapp.com/send?phone=5531989390637&text=' + msg + '" target="_blank" class="btn-agendar" style="text-decoration:none;display:inline-block;margin-bottom:12px;">Enviar no WhatsApp</a>' +
+                '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
               '</div>' +
             '</div>';
         })
