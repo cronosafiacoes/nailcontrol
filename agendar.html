@@ -201,38 +201,40 @@
       document.getElementById('card-horarios').style.display = 'block';
       document.getElementById('card-dados').style.display = 'none';
 
-      const horarios = tipoServico === 'busca' ? horariosBusca : horariosEntrega;
+      var horarios = tipoServico === 'busca' ? horariosBusca : horariosEntrega;
 
-      db.ref('agendamentos').on('value', function(snapshot) {
-        agendamentos = [];
-        var val = snapshot.val();
-        if (val) {
-          if (Array.isArray(val)) {
-            agendamentos = val.filter(function(a) { return a != null; });
-          } else {
-            Object.keys(val).forEach(function(key) {
-              if (val[key] != null) agendamentos.push(val[key]);
-            });
-          }
-        }
-
-        const ocupados = agendamentos
-          .filter(function(a) { return a.data === dataSelecionada && a.tipo === tipoServico && a.status !== 'cancelado'; })
-          .map(function(a) { return a.hora; });
-
-        let html = '';
+      function renderizar(ocupados) {
+        var html = '';
         horarios.forEach(function(h) {
-          const isOcupado = ocupados.includes(h);
-          const isSelected = horarioSelecionado === h;
-          let cls = 'horario-btn';
+          var isOcupado = ocupados.indexOf(h) !== -1;
+          var isSelected = horarioSelecionado === h;
+          var cls = 'horario-btn';
           if (isOcupado) cls += ' disabled';
           if (isSelected) cls += ' selected';
-
-          const onclick = isOcupado ? '' : 'onclick="selecionarHorario(\'' + h + '\', this)"';
+          var onclick = isOcupado ? '' : 'onclick="selecionarHorario(\'' + h + '\', this)"';
           html += '<button class="' + cls + '" ' + onclick + '>' + h + '</button>';
         });
-
         document.getElementById('horarios').innerHTML = html;
+      }
+
+      renderizar([]);
+
+      db.ref('agendamentos').once('value').then(function(snapshot) {
+        var ocupados = [];
+        var val = snapshot.val();
+        if (val) {
+          var keys = Object.keys(val);
+          keys.forEach(function(key) {
+            var a = val[key];
+            if (a && a.data === dataSelecionada && a.tipo === tipoServico && a.status !== 'cancelado' && a.hora) {
+              ocupados.push(a.hora);
+            }
+          });
+        }
+        renderizar(ocupados);
+      }).catch(function(error) {
+        console.log('Firebase offline, mostrando todos os horários');
+        renderizar([]);
       });
     }
 
