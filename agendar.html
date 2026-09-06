@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NailControl - Agendar Horário</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    :root{--primary:#e91e90;--primary-dark:#c4167a;--primary-light:#f5d0e8;--secondary:#7c3aed;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#3b82f6;--bg:#faf5f9;--card:#fff;--text:#1e1b2e;--text-muted:#6b7280;--border:#f0e4ec}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+    .container{max-width:500px;margin:0 auto}
+    .header{text-align:center;margin-bottom:30px}
+    .header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+    .header p{color:var(--text-muted);font-size:14px}
+    .card{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:24px;margin-bottom:20px;box-shadow:0 4px 24px rgba(233,30,144,0.08)}
+    .card h2{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+    .form-input,.form-select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg);transition:border-color 0.2s}
+    .form-input:focus,.form-select:focus{outline:none;border-color:var(--primary)}
+    .tipo-selector{display:flex;gap:10px;margin-bottom:16px}
+    .tipo-btn{flex:1;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;text-align:center;transition:all 0.2s;font-family:inherit}
+    .tipo-btn:hover{border-color:var(--primary-light)}
+    .tipo-btn.active{border-color:var(--primary);background:var(--primary-light)}
+    .tipo-btn .icon{font-size:24px;margin-bottom:6px}
+    .tipo-btn .label{font-size:13px;font-weight:600;color:var(--text)}
+    .tipo-btn .horario{font-size:11px;color:var(--text-muted);margin-top:2px}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .calendar-header{font-size:11px;font-weight:600;color:var(--text-muted);text-align:center;padding:8px 0}
+    .calendar-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;border:2px solid transparent;background:var(--bg)}
+    .calendar-day:hover:not(.disabled):not(.empty){border-color:var(--primary-light)}
+    .calendar-day.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .calendar-day.disabled{opacity:0.3;cursor:not-allowed}
+    .calendar-day.today{border-color:var(--primary)}
+    .calendar-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .calendar-nav button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px}
+    .calendar-nav span{font-weight:700;font-size:15px}
+    .horarios{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .horario-btn{padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-size:13px;font-weight:600;transition:all 0.2s}
+    .horario-btn:hover:not(.disabled){border-color:var(--primary)}
+    .horario-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .horario-btn.disabled{opacity:0.3;cursor:not-allowed;text-decoration:line-through}
+    .btn-agendar{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s}
+    .btn-agendar:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(233,30,144,0.3)}
+    .btn-agendar:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .success-message{text-align:center;padding:40px 20px}
+    .success-message .icon{font-size:60px;margin-bottom:16px}
+    .success-message h2{font-size:22px;font-weight:800;margin-bottom:8px;justify-content:center}
+    .success-message p{color:var(--text-muted);font-size:14px;margin-bottom:24px}
+    .btn-novo{padding:12px 24px;border:2px solid var(--primary);border-radius:10px;background:transparent;color:var(--primary);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>NailControl</h1>
+      <p>Agende seu horário de coleta ou entrega</p>
+    </div>
+
+    <div id="form-agendamento">
+      <div class="card">
+        <h2>📋 Tipo de Serviço</h2>
+        <div class="tipo-selector">
+          <button class="tipo-btn active" onclick="selecionarTipo('busca', this)">
+            <div class="icon">📤</div>
+            <div class="label">Coleta</div>
+            <div class="horario">13:00 às 18:00</div>
+          </button>
+          <button class="tipo-btn" onclick="selecionarTipo('entrega', this)">
+            <div class="icon">📥</div>
+            <div class="label">Entrega</div>
+            <div class="horario">08:00 às 12:00</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Escolha o Dia</h2>
+        <div class="calendar-nav">
+          <button onclick="mudarMes(-1)">◀</button>
+          <span id="mes-ano"></span>
+          <button onclick="mudarMes(1)">▶</button>
+        </div>
+        <div class="calendar" id="calendar"></div>
+      </div>
+
+      <div class="card" id="card-horarios" style="display:none;">
+        <h2>🕐 Horários Disponíveis</h2>
+        <div class="horarios" id="horarios"></div>
+      </div>
+
+      <div class="card" id="card-dados" style="display:none;">
+        <h2>📝 Seus Dados</h2>
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-input" id="input-nome" placeholder="Seu nome">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone *</label>
+          <input type="text" class="form-input" id="input-telefone" placeholder="(00) 00000-0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Endereço</label>
+          <input type="text" class="form-input" id="input-endereco" placeholder="Rua, número, bairro...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">O que vai gravar?</label>
+          <input type="text" class="form-input" id="input-item" placeholder="Ex: Alicate rosa, adorned...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade</label>
+          <input type="number" class="form-input" id="input-quantidade" min="1" value="1">
+        </div>
+        <button class="btn-agendar" onclick="agendar()">Agendar Horário</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB9eQzS-S0QS-S0QS-S0QS-S0QS-S0QS",
+      authDomain: "nailcontrol-21607.firebaseapp.com",
+      databaseURL: "https://nailcontrol-21607-default-rtdb.firebaseio.com",
+      projectId: "nailcontrol-21607",
+      storageBucket: "nailcontrol-21607.firebasestorage.app",
+      messagingSenderId: "584330953584",
+      appId: "1:584330953584:web:055be7d6b95dbae491bd04"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let tipoServico = 'busca';
+    let mesAtual = new Date().getMonth();
+    let anoAtual = new Date().getFullYear();
+    let dataSelecionada = null;
+    let horarioSelecionado = null;
+    let agendamentos = [];
+
+    const horariosBusca = ['13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+    const horariosEntrega = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30'];
+
+    function selecionarTipo(tipo, btn) {
+      tipoServico = tipo;
+      document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      dataSelecionada = null;
+      horarioSelecionado = null;
+      document.getElementById('card-horarios').style.display = 'none';
+      document.getElementById('card-dados').style.display = 'none';
+      renderizarCalendario();
+    }
+
+    function renderizarCalendario() {
+      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      document.getElementById('mes-ano').textContent = meses[mesAtual] + ' ' + anoAtual;
+
+      const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
+      const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+
+      const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      let html = diasSemana.map(d => '<div class="calendar-header">' + d + '</div>').join('');
+
+      for (let i = 0; i < primeiroDia; i++) {
+        html += '<div class="calendar-day empty"></div>';
+      }
+
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const data = new Date(anoAtual, mesAtual, dia);
+        data.setHours(0,0,0,0);
+        const dataStr = anoAtual + '-' + String(mesAtual + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        const isHoje = data.getTime() === hoje.getTime();
+        const isPassado = data < hoje;
+        const isDomingo = data.getDay() === 0;
+
+        let classes = 'calendar-day';
+        if (isHoje) classes += ' today';
+        if (isPassado || isDomingo) classes += ' disabled';
+        if (dataSelecionada === dataStr) classes += ' selected';
+
+        const onclick = (isPassado || isDomingo) ? '' : 'onclick="selecionarData(\'' + dataStr + '\')"';
+        html += '<div class="' + classes + '" ' + onclick + '>' + dia + '</div>';
+      }
+
+      document.getElementById('calendar').innerHTML = html;
+    }
+
+    function selecionarData(data) {
+      dataSelecionada = data;
+      horarioSelecionado = null;
+      renderizarCalendario();
+      carregarHorarios();
+    }
+
+    function carregarHorarios() {
+      document.getElementById('card-horarios').style.display = 'block';
+      document.getElementById('card-dados').style.display = 'none';
+
+      const horarios = tipoServico === 'busca' ? horariosBusca : horariosEntrega;
+
+      db.ref('agendamentos').on('value', function(snapshot) {
+        agendamentos = [];
+        snapshot.forEach(function(child) {
+          agendamentos.push(child.val());
+        });
+
+        const ocupados = agendamentos
+          .filter(function(a) { return a.data === dataSelecionada && a.tipo === tipoServico && a.status !== 'cancelado'; })
+          .map(function(a) { return a.hora; });
+
+        let html = '';
+        horarios.forEach(function(h) {
+          const isOcupado = ocupados.includes(h);
+          const isSelected = horarioSelecionado === h;
+          let cls = 'horario-btn';
+          if (isOcupado) cls += ' disabled';
+          if (isSelected) cls += ' selected';
+
+          const onclick = isOcupado ? '' : 'onclick="selecionarHorario(\'' + h + '\', this)"';
+          html += '<button class="' + cls + '" ' + onclick + '>' + h + '</button>';
+        });
+
+        document.getElementById('horarios').innerHTML = html;
+      });
+    }
+
+    function selecionarHorario(hora, btn) {
+      horarioSelecionado = hora;
+      document.querySelectorAll('.horario-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      document.getElementById('card-dados').style.display = 'block';
+    }
+
+    function agendar() {
+      var nome = document.getElementById('input-nome').value.trim();
+      var telefone = document.getElementById('input-telefone').value.trim();
+      var endereco = document.getElementById('input-endereco').value.trim();
+      var item = document.getElementById('input-item').value.trim();
+      var quantidade = document.getElementById('input-quantidade').value;
+
+      if (!nome || !telefone) {
+        alert('Preencha nome e telefone!');
+        return;
+      }
+
+      var novoAgendamento = {
+        id: Date.now().toString(),
+        clienteId: 'publico_' + Date.now(),
+        nome: nome,
+        telefone: telefone,
+        endereco: endereco,
+        tipo: tipoServico,
+        status: 'pendente',
+        data: dataSelecionada,
+        hora: horarioSelecionado,
+        item: item || 'Alicate',
+        quantidade: parseInt(quantidade) || 1,
+        valor: 0,
+        obs: '',
+        criadoEm: new Date().toISOString()
+      };
+
+      db.ref('agendamentos/' + novoAgendamento.id).set(novoAgendamento)
+        .then(function() {
+          var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
+          var dataFormatada = formatarData(dataSelecionada);
+          document.getElementById('form-agendamento').innerHTML =
+            '<div class="card">' +
+              '<div class="success-message">' +
+                '<div class="icon">✅</div>' +
+                '<h2>Agendamento Confirmado!</h2>' +
+                '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
+                '<button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
+              '</div>' +
+            '</div>';
+        })
+        .catch(function(error) {
+          alert('Erro ao agendar. Tente novamente.');
+          console.error(error);
+        });
+    }
+
+    function formatarData(data) {
+      var parts = data.split('-');
+      return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+
+    renderizarCalendario();
+  </script>
+</body>
+</html>
