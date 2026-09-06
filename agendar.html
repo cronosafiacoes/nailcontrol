@@ -257,57 +257,76 @@
         return;
       }
 
-      var novoAgendamento = {
-        id: Date.now().toString(),
-        clienteId: 'publico_' + Date.now(),
-        nome: nome,
-        telefone: telefone,
-        endereco: endereco,
-        tipo: tipoServico,
-        status: 'pendente',
-        data: dataSelecionada,
-        hora: horarioSelecionado,
-        item: item || 'Alicate',
-        quantidade: parseInt(quantidade) || 1,
-        valor: 0,
-        obs: '',
-        criadoEm: new Date().toISOString()
-      };
+      var telefoneLimpo = telefone.replace(/\D/g, '');
 
-      db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento)
-        .then(function() {
-          var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
-          var dataFormatada = formatarData(dataSelecionada);
+      db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
+        var val = snapshot.val();
+        if (val) {
+          var keys = Object.keys(val);
+          for (var i = 0; i < keys.length; i++) {
+            var a = val[keys[i]];
+            if (a && a.telefone) {
+              var telCadastro = a.telefone.replace(/\D/g, '');
+              if (telCadastro === telefoneLimpo && a.data === dataSelecionada && a.status !== 'cancelado') {
+                alert('Você já tem um agendamento neste dia! Só é permitido 1 agendamento por dia por telefone.');
+                return;
+              }
+            }
+          }
+        }
 
-          var msg = encodeURIComponent(
-            'Novo pré-agendamento confirmado!\n\n' +
-            tipoLabel + '\n' +
-            'Data: ' + dataFormatada + '\n' +
-            'Horário: ' + horarioSelecionado + '\n\n' +
-            'Cliente: ' + nome + '\n' +
-            'Telefone: ' + telefone + '\n' +
-            'Endereço: ' + (endereco || 'Não informado') + '\n' +
-            'Item: ' + (item || 'Alicate') + '\n' +
-            'Quantidade: ' + (quantidade || 1)
-          );
+        var novoAgendamento = {
+          id: Date.now().toString(),
+          clienteId: 'publico_' + Date.now(),
+          nome: nome,
+          telefone: telefone,
+          endereco: endereco,
+          tipo: tipoServico,
+          status: 'pendente',
+          data: dataSelecionada,
+          hora: horarioSelecionado,
+          item: item || 'Alicate',
+          quantidade: parseInt(quantidade) || 1,
+          valor: 0,
+          obs: '',
+          criadoEm: new Date().toISOString()
+        };
 
-          document.getElementById('form-agendamento').innerHTML =
-            '<div class="card">' +
-              '<div class="success-message">' +
-                '<div class="icon">✅</div>' +
-                '<h2>Agendamento Confirmado!</h2>' +
-                '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
-                '<p style="color:var(--success);font-weight:600;">Mensagem enviada no WhatsApp!</p>' +
-                '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
-              '</div>' +
-            '</div>';
+        return db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento);
+      }).then(function(result) {
+        if (!result) return;
 
-          window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + msg, '_blank');
-        })
-        .catch(function(error) {
-          alert('Erro ao agendar. Tente novamente.');
-          console.error(error);
-        });
+        var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
+        var dataFormatada = formatarData(dataSelecionada);
+
+        var msg = encodeURIComponent(
+          'Novo pré-agendamento confirmado!\n\n' +
+          tipoLabel + '\n' +
+          'Data: ' + dataFormatada + '\n' +
+          'Horário: ' + horarioSelecionado + '\n\n' +
+          'Cliente: ' + nome + '\n' +
+          'Telefone: ' + telefone + '\n' +
+          'Endereço: ' + (endereco || 'Não informado') + '\n' +
+          'Item: ' + (item || 'Alicate') + '\n' +
+          'Quantidade: ' + (quantidade || 1)
+        );
+
+        document.getElementById('form-agendamento').innerHTML =
+          '<div class="card">' +
+            '<div class="success-message">' +
+              '<div class="icon">✅</div>' +
+              '<h2>Agendamento Confirmado!</h2>' +
+              '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
+              '<p style="color:var(--success);font-weight:600;">Mensagem enviada no WhatsApp!</p>' +
+              '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
+            '</div>' +
+          '</div>';
+
+        window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + msg, '_blank');
+      }).catch(function(error) {
+        alert('Erro ao agendar. Tente novamente.');
+        console.error(error);
+      });
     }
 
     function formatarData(data) {
