@@ -7,70 +7,54 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    :root{--primary:#e91e90;--primary-dark:#c4167a;--primary-light:#f5d0e8;--secondary:#7c3aed;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#3b82f6;--bg:#faf5f9;--card:#fff;--text:#1e1b2e;--text-muted:#6b7280;--border:#f0e4ec}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    :root{--primary:#e91e90;--secondary:#7c3aed;--success:#10b981;--bg:#faf5f9;--card:#fff;--text:#1e1b2e;--text-muted:#6b7280;--border:#f0e4ec}
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
     .container{max-width:500px;margin:0 auto}
-    .header{text-align:center;margin-bottom:30px}
-    .header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-    .header p{color:var(--text-muted);font-size:14px}
-    .card{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:24px;margin-bottom:20px;box-shadow:0 4px 24px rgba(233,30,144,0.08)}
-    .card h2{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-    .form-group{margin-bottom:16px}
-    .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-    .form-input,.form-select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg);transition:border-color 0.2s}
-    .form-input:focus,.form-select:focus{outline:none;border-color:var(--primary)}
-    .tipo-selector{display:flex;gap:10px;margin-bottom:16px}
-    .tipo-btn{flex:1;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;text-align:center;transition:all 0.2s;font-family:inherit}
-    .tipo-btn:hover{border-color:var(--primary-light)}
-    .tipo-btn.active{border-color:var(--primary);background:var(--primary-light)}
-    .tipo-btn .icon{font-size:24px;margin-bottom:6px}
-    .tipo-btn .label{font-size:13px;font-weight:600;color:var(--text)}
-    .tipo-btn .horario{font-size:11px;color:var(--text-muted);margin-top:2px}
-    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .calendar-header{font-size:11px;font-weight:600;color:var(--text-muted);text-align:center;padding:8px 0}
-    .calendar-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;border:2px solid transparent;background:var(--bg)}
-    .calendar-day:hover:not(.disabled):not(.empty){border-color:var(--primary-light)}
+    .header{text-align:center;margin-bottom:24px}
+    .header h1{font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .header p{color:var(--text-muted);font-size:13px;margin-top:4px}
+    .card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 2px 16px rgba(233,30,144,0.06)}
+    .card h2{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text)}
+    .form-group{margin-bottom:14px}
+    .form-label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
+    .form-input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg);transition:border-color 0.2s}
+    .form-input:focus{outline:none;border-color:var(--primary)}
+    .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+    .calendar-header{font-size:10px;font-weight:600;color:var(--text-muted);text-align:center;padding:6px 0}
+    .calendar-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;border:2px solid transparent;background:var(--bg)}
+    .calendar-day:hover:not(.disabled):not(.empty){border-color:var(--primary)}
     .calendar-day.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
     .calendar-day.disabled{opacity:0.3;cursor:not-allowed}
     .calendar-day.today{border-color:var(--primary)}
-    .calendar-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .calendar-nav button{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px 8px}
-    .calendar-nav span{font-weight:700;font-size:15px}
-    .horarios{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-    .horario-btn{padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-size:13px;font-weight:600;transition:all 0.2s}
+    .calendar-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .calendar-nav button{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text);padding:4px 8px}
+    .calendar-nav span{font-weight:700;font-size:14px}
+    .horarios{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+    .horario-btn{padding:9px;border:2px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;text-align:center;font-family:inherit;font-size:12px;font-weight:600;transition:all 0.2s}
     .horario-btn:hover:not(.disabled){border-color:var(--primary)}
     .horario-btn.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
     .horario-btn.disabled{opacity:0.3;cursor:not-allowed;text-decoration:line-through}
-    .btn-agendar{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s}
-    .btn-agendar:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(233,30,144,0.3)}
-    .btn-agendar:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .success-message{text-align:center;padding:40px 20px}
-    .success-message .icon{font-size:60px;margin-bottom:16px}
-    .success-message h2{font-size:22px;font-weight:800;margin-bottom:8px;justify-content:center}
-    .success-message p{color:var(--text-muted);font-size:14px;margin-bottom:24px}
-    .btn-novo{padding:12px 24px;border:2px solid var(--primary);border-radius:10px;background:transparent;color:var(--primary);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    .btn-agendar{width:100%;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:4px}
+    .btn-agendar:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(233,30,144,0.3)}
+    .success-message{text-align:center;padding:30px 16px}
+    .success-message .icon{font-size:50px;margin-bottom:12px}
+    .success-message h2{font-size:20px;font-weight:700;margin-bottom:6px;justify-content:center}
+    .success-message p{color:var(--text-muted);font-size:13px;margin-bottom:16px}
+    .btn-novo{padding:10px 20px;border:2px solid var(--primary);border-radius:8px;background:transparent;color:var(--primary);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+    .aviso{background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;padding:10px 14px;font-size:12px;color:#92400e;margin-bottom:16px}
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>NailControl</h1>
-      <p>Agende seu horário de coleta ou entrega</p>
+      <p>Agende sua coleta</p>
     </div>
 
     <div id="form-agendamento">
-      <div class="card">
-        <h2>📋 Tipo de Serviço</h2>
-        <div class="tipo-selector">
-          <button class="tipo-btn active" onclick="selecionarTipo('busca', this)">
-            <div class="icon">📤</div>
-            <div class="label">Coleta</div>
-            <div class="horario">13:00 às 18:00</div>
-          </button>
-        </div>
-      </div>
+      <div class="aviso">Coleta das 13:00 às 18:00. Apenas 1 agendamento por telefone por dia.</div>
 
       <div class="card">
         <h2>📅 Escolha o Dia</h2>
@@ -115,7 +99,7 @@
   </div>
 
   <script>
-    const firebaseConfig = {
+    var firebaseConfig = {
       apiKey: "AIzaSyBBERqs003HKOlIX_q5h7O7DywO7jwlGhI",
       authDomain: "nailcontrol-21607.firebaseapp.com",
       databaseURL: "https://nailcontrol-21607-default-rtdb.firebaseio.com",
@@ -126,63 +110,59 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    var db = firebase.database();
 
-    let tipoServico = 'busca';
-    let mesAtual = new Date().getMonth();
-    let anoAtual = new Date().getFullYear();
-    let dataSelecionada = null;
-    let horarioSelecionado = null;
-    let agendamentos = [];
+    var mesAtual = new Date().getMonth();
+    var anoAtual = new Date().getFullYear();
+    var dataSelecionada = null;
+    var horarioSelecionado = null;
 
-    const horariosBusca = ['13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
-    const horariosEntrega = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30'];
-
-    function selecionarTipo(tipo, btn) {
-      tipoServico = tipo;
-      document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      dataSelecionada = null;
-      horarioSelecionado = null;
-      document.getElementById('card-horarios').style.display = 'none';
-      document.getElementById('card-dados').style.display = 'none';
-      renderizarCalendario();
-    }
+    var horariosBusca = ['13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
 
     function renderizarCalendario() {
-      const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       document.getElementById('mes-ano').textContent = meses[mesAtual] + ' ' + anoAtual;
 
-      const primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
-      const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
-      const hoje = new Date();
+      var primeiroDia = new Date(anoAtual, mesAtual, 1).getDay();
+      var diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
+      var hoje = new Date();
       hoje.setHours(0,0,0,0);
 
-      const diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-      let html = diasSemana.map(d => '<div class="calendar-header">' + d + '</div>').join('');
+      var diasSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      var html = '';
+      for (var d = 0; d < 7; d++) {
+        html += '<div class="calendar-header">' + diasSemana[d] + '</div>';
+      }
 
-      for (let i = 0; i < primeiroDia; i++) {
+      for (var i = 0; i < primeiroDia; i++) {
         html += '<div class="calendar-day empty"></div>';
       }
 
-      for (let dia = 1; dia <= diasNoMes; dia++) {
-        const data = new Date(anoAtual, mesAtual, dia);
+      for (var dia = 1; dia <= diasNoMes; dia++) {
+        var data = new Date(anoAtual, mesAtual, dia);
         data.setHours(0,0,0,0);
-        const dataStr = anoAtual + '-' + String(mesAtual + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
-        const isHoje = data.getTime() === hoje.getTime();
-        const isPassado = data < hoje;
-        const isDomingo = data.getDay() === 0;
+        var dataStr = anoAtual + '-' + String(mesAtual + 1).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+        var isHoje = data.getTime() === hoje.getTime();
+        var isPassado = data < hoje;
+        var isDomingo = data.getDay() === 0;
 
-        let classes = 'calendar-day';
+        var classes = 'calendar-day';
         if (isHoje) classes += ' today';
         if (isPassado || isDomingo) classes += ' disabled';
         if (dataSelecionada === dataStr) classes += ' selected';
 
-        const onclick = (isPassado || isDomingo) ? '' : 'onclick="selecionarData(\'' + dataStr + '\')"';
+        var onclick = (isPassado || isDomingo) ? '' : "onclick=\"selecionarData('" + dataStr + "')\"";
         html += '<div class="' + classes + '" ' + onclick + '>' + dia + '</div>';
       }
 
       document.getElementById('calendar').innerHTML = html;
+    }
+
+    function mudarMes(delta) {
+      mesAtual += delta;
+      if (mesAtual > 11) { mesAtual = 0; anoAtual++; }
+      if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
+      renderizarCalendario();
     }
 
     function selecionarData(data) {
@@ -196,46 +176,42 @@
       document.getElementById('card-horarios').style.display = 'block';
       document.getElementById('card-dados').style.display = 'none';
 
-      var horarios = tipoServico === 'busca' ? horariosBusca : horariosEntrega;
-
-      function renderizar(ocupados) {
-        var html = '';
-        horarios.forEach(function(h) {
-          var isOcupado = ocupados.indexOf(h) !== -1;
-          var isSelected = horarioSelecionado === h;
-          var cls = 'horario-btn';
-          if (isOcupado) cls += ' disabled';
-          if (isSelected) cls += ' selected';
-          var onclick = isOcupado ? '' : 'onclick="selecionarHorario(\'' + h + '\', this)"';
-          html += '<button class="' + cls + '" ' + onclick + '>' + h + '</button>';
-        });
-        document.getElementById('horarios').innerHTML = html;
+      var html = '';
+      for (var i = 0; i < horariosBusca.length; i++) {
+        var h = horariosBusca[i];
+        var cls = 'horario-btn';
+        var onclick = "onclick=\"selecionarHorario('" + h + "', this)\"";
+        html += '<button class="' + cls + '" ' + onclick + '>' + h + '</button>';
       }
-
-      renderizar([]);
+      document.getElementById('horarios').innerHTML = html;
 
       db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
         var ocupados = [];
         var val = snapshot.val();
         if (val) {
           var keys = Object.keys(val);
-          keys.forEach(function(key) {
-            var a = val[key];
-            if (a && a.data === dataSelecionada && a.tipo === tipoServico && a.status !== 'cancelado' && a.hora) {
+          for (var i = 0; i < keys.length; i++) {
+            var a = val[keys[i]];
+            if (a && a.data === dataSelecionada && a.status !== 'cancelado' && a.hora) {
               ocupados.push(a.hora);
             }
-          });
+          }
         }
-        renderizar(ocupados);
-      }).catch(function(error) {
-        console.log('Firebase offline, mostrando todos os horários');
-        renderizar([]);
-      });
+        var botoes = document.querySelectorAll('.horario-btn');
+        for (var j = 0; j < botoes.length; j++) {
+          var horarioTexto = botoes[j].textContent;
+          if (ocupados.indexOf(horarioTexto) !== -1) {
+            botoes[j].classList.add('disabled');
+            botoes[j].removeAttribute('onclick');
+          }
+        }
+      }).catch(function() {});
     }
 
     function selecionarHorario(hora, btn) {
       horarioSelecionado = hora;
-      document.querySelectorAll('.horario-btn').forEach(function(b) { b.classList.remove('selected'); });
+      var botoes = document.querySelectorAll('.horario-btn');
+      for (var i = 0; i < botoes.length; i++) botoes[i].classList.remove('selected');
       btn.classList.add('selected');
       document.getElementById('card-dados').style.display = 'block';
     }
@@ -257,13 +233,15 @@
       db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
         var val = snapshot.val();
         if (val) {
+          var hoje = new Date();
+          hoje.setHours(0,0,0,0);
           var keys = Object.keys(val);
           for (var i = 0; i < keys.length; i++) {
             var a = val[keys[i]];
             if (a && a.telefone) {
               var telCadastro = a.telefone.replace(/\D/g, '');
               if (telCadastro === telefoneLimpo && a.data === dataSelecionada && a.status !== 'cancelado') {
-                alert('Você já tem um agendamento neste dia! Só é permitido 1 agendamento por dia por telefone.');
+                alert('Voce ja tem um agendamento neste dia! So e permitido 1 agendamento por dia por telefone.');
                 return;
               }
             }
@@ -276,7 +254,7 @@
           nome: nome,
           telefone: telefone,
           endereco: endereco,
-          tipo: tipoServico,
+          tipo: 'busca',
           status: 'pendente',
           data: dataSelecionada,
           hora: horarioSelecionado,
@@ -291,31 +269,27 @@
       }).then(function(result) {
         if (!result) return;
 
-        var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
         var dataFormatada = formatarData(dataSelecionada);
 
         var msg = encodeURIComponent(
-          'Novo pré-agendamento confirmado!\n\n' +
-          tipoLabel + '\n' +
+          'Novo pre-agendamento confirmado!\n\n' +
+          'Coleta\n' +
           'Data: ' + dataFormatada + '\n' +
-          'Horário: ' + horarioSelecionado + '\n\n' +
+          'Horario: ' + horarioSelecionado + '\n\n' +
           'Cliente: ' + nome + '\n' +
           'Telefone: ' + telefone + '\n' +
-          'Endereço: ' + (endereco || 'Não informado') + '\n' +
+          'Endereco: ' + (endereco || 'Nao informado') + '\n' +
           'Item: ' + (item || 'Alicate') + '\n' +
           'Quantidade: ' + (quantidade || 1)
         );
 
         document.getElementById('form-agendamento').innerHTML =
-          '<div class="card">' +
-            '<div class="success-message">' +
-              '<div class="icon">✅</div>' +
-              '<h2>Agendamento Confirmado!</h2>' +
-              '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
-              '<p style="color:var(--success);font-weight:600;">Mensagem enviada no WhatsApp!</p>' +
-              '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
-            '</div>' +
-          '</div>';
+          '<div class="card"><div class="success-message">' +
+            '<div class="icon">✅</div>' +
+            '<h2>Agendamento Confirmado!</h2>' +
+            '<p>Coleta agendada para ' + dataFormatada + ' as ' + horarioSelecionado + '</p>' +
+            '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horario</button>' +
+          '</div></div>';
 
         window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + msg, '_blank');
       }).catch(function(error) {
