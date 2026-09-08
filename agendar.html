@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NailControl - Agendar Horário</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
@@ -228,27 +231,7 @@
         return;
       }
 
-      var telefoneLimpo = telefone.replace(/\D/g, '');
-
-      db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
-        var val = snapshot.val();
-        if (val) {
-          var hoje = new Date();
-          hoje.setHours(0,0,0,0);
-          var keys = Object.keys(val);
-          for (var i = 0; i < keys.length; i++) {
-            var a = val[keys[i]];
-            if (a && a.telefone) {
-              var telCadastro = a.telefone.replace(/\D/g, '');
-              if (telCadastro === telefoneLimpo && a.data === dataSelecionada && a.status !== 'cancelado') {
-                alert('Voce ja tem um agendamento neste dia! So e permitido 1 agendamento por dia por telefone.');
-                return;
-              }
-            }
-          }
-        }
-
-        var novoAgendamento = {
+      var novoAgendamento = {
           id: Date.now().toString(),
           clienteId: 'publico_' + Date.now(),
           nome: nome,
@@ -265,9 +248,7 @@
           criadoEm: new Date().toISOString()
         };
 
-        return db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento);
-      }).then(function(result) {
-        if (!result) return;
+      db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento).then(function() {
 
         var dataFormatada = formatarData(dataSelecionada);
 
