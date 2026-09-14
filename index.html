@@ -1945,21 +1945,23 @@ function concluirAgendamento(id) {
   agendamentos = agendamentos.map(a => a.id === id ? {...a, status: 'concluido'} : a);
   salvarDados('agendamentos', agendamentos);
 
-  const cliente = clientes.find(c => c.id === agendamento.clienteId);
-  const qtd = agendamento.quantidade || cliente?.quantidade || 1;
-  const valorTotal = agendamento.valor || 0;
+  if (agendamento.tipo !== 'entrega') {
+    const cliente = clientes.find(c => c.id === agendamento.clienteId);
+    const qtd = agendamento.quantidade || cliente?.quantidade || 1;
+    const valorTotal = agendamento.valor || 0;
 
-  if (valorTotal > 0) {
-    const tipoLabel = agendamento.tipo === 'entrega' ? 'Entrega' : 'Coleta';
-    financeiro.push({
-      id: Date.now().toString(),
-      tipo: 'receita',
-      descricao: `${tipoLabel}: ${cliente?.nome || agendamento.nome || 'Cliente'} - ${qtd} alicate${qtd > 1 ? 's' : ''}`,
-      valor: valorTotal,
-      data: new Date().toISOString().split('T')[0],
-      categoria: 'servico'
-    });
-    salvarDados('financeiro', financeiro);
+    if (valorTotal > 0) {
+      const tipoLabel = agendamento.tipo === 'entrega' ? 'Entrega' : 'Coleta';
+      financeiro.push({
+        id: Date.now().toString(),
+        tipo: 'receita',
+        descricao: `${tipoLabel}: ${cliente?.nome || agendamento.nome || 'Cliente'} - ${qtd} alicate${qtd > 1 ? 's' : ''}`,
+        valor: valorTotal,
+        data: new Date().toISOString().split('T')[0],
+        categoria: 'servico'
+      });
+      salvarDados('financeiro', financeiro);
+    }
   }
 
   renderizarCalendario();
@@ -2343,7 +2345,8 @@ function renderizarDashboard() {
   const areceberContainer = document.getElementById('dashboard-areceber');
   const pendentes = agendamentos.filter(a =>
     a.status !== 'concluido' &&
-    a.status !== 'cancelado'
+    a.status !== 'cancelado' &&
+    a.tipo !== 'entrega'
   );
   const totalAReceber = pendentes.reduce((s, a) => s + (a.valor || 0), 0);
 
