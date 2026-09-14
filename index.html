@@ -1972,8 +1972,15 @@ function concluirAgendamento(id) {
 function renderizarTabelaAgendamentos() {
   const busca = (document.getElementById('busca-agendamento')?.value || '').toLowerCase();
   const lista = agendamentos
-    .filter(a => !busca || (clientes.find(c => c.id === a.clienteId)?.nome || '').toLowerCase().includes(busca))
-    .sort((a, b) => a.data.localeCompare(b.data));
+    .filter(a => {
+      const nomeCliente = (clientes.find(c => c.id === a.clienteId)?.nome || a.nome || '').toLowerCase();
+      return !busca || nomeCliente.includes(busca);
+    })
+    .sort((a, b) => {
+      const nomeA = (clientes.find(c => c.id === a.clienteId)?.nome || a.nome || '').toLowerCase();
+      const nomeB = (clientes.find(c => c.id === b.clienteId)?.nome || b.nome || '').toLowerCase();
+      return nomeA.localeCompare(nomeB) || a.data.localeCompare(b.data);
+    });
 
   const tbody = document.getElementById('agend-tabela');
   tbody.innerHTML = lista.length ? lista.map(a => {
