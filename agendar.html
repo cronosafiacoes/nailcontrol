@@ -253,6 +253,35 @@
       }
 
       var telefoneLimpo = telefone.replace(/\D/g, '');
+      var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
+      var dataFormatada = formatarData(dataSelecionada);
+
+      var msg = 'Novo pré-agendamento confirmado!\n\n' +
+        tipoLabel + '\n' +
+        'Data: ' + dataFormatada + '\n' +
+        'Horário: ' + horarioSelecionado + '\n\n' +
+        'Cliente: ' + nome + '\n' +
+        'Telefone: ' + telefone + '\n' +
+        'Endereço: ' + (endereco || 'Não informado') + '\n' +
+        'Item: ' + (item || 'Alicate') + '\n' +
+        'Quantidade: ' + (quantidade || 1);
+
+      var novoAgendamento = {
+        id: Date.now().toString(),
+        clienteId: 'publico_' + Date.now(),
+        nome: nome,
+        telefone: telefone,
+        endereco: endereco,
+        tipo: tipoServico,
+        status: 'pendente',
+        data: dataSelecionada,
+        hora: horarioSelecionado,
+        item: item || 'Alicate',
+        quantidade: parseInt(quantidade) || 1,
+        valor: 0,
+        obs: '',
+        criadoEm: new Date().toISOString()
+      };
 
       db.ref('nailcontrol/agendamentos').once('value').then(function(snapshot) {
         var val = snapshot.val();
@@ -270,42 +299,6 @@
           }
         }
 
-        var novoAgendamento = {
-          id: Date.now().toString(),
-          clienteId: 'publico_' + Date.now(),
-          nome: nome,
-          telefone: telefone,
-          endereco: endereco,
-          tipo: tipoServico,
-          status: 'pendente',
-          data: dataSelecionada,
-          hora: horarioSelecionado,
-          item: item || 'Alicate',
-          quantidade: parseInt(quantidade) || 1,
-          valor: 0,
-          obs: '',
-          criadoEm: new Date().toISOString()
-        };
-
-        return db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento);
-      }).then(function(result) {
-        if (!result) return;
-
-        var tipoLabel = tipoServico === 'busca' ? '📤 Coleta' : '📥 Entrega';
-        var dataFormatada = formatarData(dataSelecionada);
-
-        var msg = encodeURIComponent(
-          'Novo pré-agendamento confirmado!\n\n' +
-          tipoLabel + '\n' +
-          'Data: ' + dataFormatada + '\n' +
-          'Horário: ' + horarioSelecionado + '\n\n' +
-          'Cliente: ' + nome + '\n' +
-          'Telefone: ' + telefone + '\n' +
-          'Endereço: ' + (endereco || 'Não informado') + '\n' +
-          'Item: ' + (item || 'Alicate') + '\n' +
-          'Quantidade: ' + (quantidade || 1)
-        );
-
         document.getElementById('form-agendamento').innerHTML =
           '<div class="card">' +
             '<div class="success-message">' +
@@ -317,10 +310,29 @@
             '</div>' +
           '</div>';
 
-        window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + msg, '_blank');
+        window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + encodeURIComponent(msg), '_blank');
+
+        db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento).catch(function(err) {
+          console.error('Erro ao salvar no Firebase:', err);
+        });
       }).catch(function(error) {
-        alert('Erro ao agendar. Tente novamente.');
-        console.error(error);
+        console.error('Erro:', error);
+        document.getElementById('form-agendamento').innerHTML =
+          '<div class="card">' +
+            '<div class="success-message">' +
+              '<div class="icon">✅</div>' +
+              '<h2>Agendamento Confirmado!</h2>' +
+              '<p>' + tipoLabel + ' agendada para ' + dataFormatada + ' às ' + horarioSelecionado + '</p>' +
+              '<p style="color:var(--success);font-weight:600;">Mensagem enviada no WhatsApp!</p>' +
+              '<br><button class="btn-novo" onclick="location.reload()">Agendar Novo Horário</button>' +
+            '</div>' +
+          '</div>';
+
+        window.open('https://api.whatsapp.com/send?phone=5531989390637&text=' + encodeURIComponent(msg), '_blank');
+
+        db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento).catch(function(err) {
+          console.error('Erro ao salvar no Firebase:', err);
+        });
       });
     }
 
