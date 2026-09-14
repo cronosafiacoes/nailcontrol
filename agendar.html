@@ -96,6 +96,13 @@
           <label class="form-label">Quantidade</label>
           <input type="number" class="form-input" id="input-quantidade" min="1" value="1">
         </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="input-tipo">
+            <option value="coleta">Coleta</option>
+            <option value="entrega">Entrega</option>
+          </select>
+        </div>
         <button class="btn-agendar" onclick="agendar()">Agendar Horário</button>
       </div>
     </div>
@@ -195,7 +202,7 @@
           var keys = Object.keys(val);
           for (var i = 0; i < keys.length; i++) {
             var a = val[keys[i]];
-            if (a && a.data === dataSelecionada && a.status !== 'cancelado' && a.hora) {
+            if (a && a.data === dataSelecionada && a.status !== 'cancelado' && a.hora && a.tipo === 'coleta') {
               ocupados.push(a.hora);
             }
           }
@@ -225,6 +232,7 @@
       var endereco = document.getElementById('input-endereco').value.trim();
       var item = document.getElementById('input-item').value.trim();
       var quantidade = parseInt(document.getElementById('input-quantidade').value) || 1;
+      var tipo = document.getElementById('input-tipo').value || 'coleta';
 
       if (!nome || !telefone) {
         alert('Preencha nome e telefone!');
@@ -280,7 +288,7 @@
           nome: nome,
           telefone: telefone,
           endereco: endereco,
-          tipo: 'busca',
+          tipo: tipo,
           status: 'pendente',
           data: dataSelecionada,
           hora: horarioSelecionado,
