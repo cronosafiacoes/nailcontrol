@@ -96,13 +96,6 @@
           <label class="form-label">Quantidade</label>
           <input type="number" class="form-input" id="input-quantidade" min="1" value="1">
         </div>
-        <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <select class="form-input" id="input-tipo">
-            <option value="coleta">Coleta</option>
-            <option value="entrega">Entrega</option>
-          </select>
-        </div>
         <button class="btn-agendar" onclick="agendar()">Agendar Horário</button>
       </div>
     </div>
@@ -232,7 +225,6 @@
       var endereco = document.getElementById('input-endereco').value.trim();
       var item = document.getElementById('input-item').value.trim();
       var quantidade = parseInt(document.getElementById('input-quantidade').value) || 1;
-      var tipo = document.getElementById('input-tipo').value || 'coleta';
 
       if (!nome || !telefone) {
         alert('Preencha nome e telefone!');
@@ -282,13 +274,14 @@
         return { valor: clienteValor };
       }).then(function(result) {
         var valorCliente = (result && result.valor) || 0;
-        var novoAgendamento = {
+
+        var agendamentoColeta = {
           id: Date.now().toString(),
           clienteId: clienteId,
           nome: nome,
           telefone: telefone,
           endereco: endereco,
-          tipo: tipo,
+          tipo: 'coleta',
           status: 'pendente',
           data: dataSelecionada,
           hora: horarioSelecionado,
@@ -299,14 +292,45 @@
           criadoEm: new Date().toISOString()
         };
 
-        return db.ref('nailcontrol/agendamentos/' + novoAgendamento.id).set(novoAgendamento);
+        var dataEntrega = new Date(dataSelecionada + 'T12:00:00');
+        dataEntrega.setDate(dataEntrega.getDate() + 1);
+        var dataEntregaStr = dataEntrega.toISOString().split('T')[0];
+
+        var agendamentoEntrega = {
+          id: (Date.now() + 1).toString(),
+          clienteId: clienteId,
+          nome: nome,
+          telefone: telefone,
+          endereco: endereco,
+          tipo: 'entrega',
+          status: 'pendente',
+          data: dataEntregaStr,
+          hora: horarioSelecionado,
+          item: item || 'Alicate',
+          quantidade: quantidade,
+          valor: quantidade * 15,
+          obs: 'Entrega automática',
+          criadoEm: new Date().toISOString()
+        };
+
+        var updates = {};
+        updates['nailcontrol/agendamentos/' + agendamentoColeta.id] = agendamentoColeta;
+        updates['nailcontrol/agendamentos/' + agendamentoEntrega.id] = agendamentoEntrega;
+        return db.ref().update(updates);
       }).then(function() {
         var dataFormatada = formatarData(dataSelecionada);
+
+        var dataEntrega = new Date(dataSelecionada + 'T12:00:00');
+        dataEntrega.setDate(dataEntrega.getDate() + 1);
+        var dataEntregaFormatada = formatarData(dataEntrega.toISOString().split('T')[0]);
 
         var msg = encodeURIComponent(
           'Novo pré-agendamento confirmado!\n\n' +
           'Coleta\n' +
           'Data: ' + dataFormatada + '\n' +
+          'Horário: ' + horarioSelecionado + '\n\n' +
+          'Entrega (automática)\n' +
+          'Data: ' + dataEntregaFormatada + '\n' +
           'Horário: ' + horarioSelecionado + '\n\n' +
           'Cliente: ' + nome + '\n' +
           'Telefone: ' + telefone + '\n' +
