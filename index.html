@@ -2081,7 +2081,9 @@ function renderizarFinanceiro() {
     a.status !== 'cancelado'
   );
 
-  const totalAReceber = pendentes.reduce((s, a) => s + (a.valor || 0), 0);
+  const totalAReceber = pendentes
+    .filter(a => a.tipo !== 'entrega')
+    .reduce((s, a) => s + (a.valor || 0), 0);
   document.getElementById('fin-areceber').textContent = formatarMoeda(totalAReceber);
 
   const containerAreceber = document.getElementById('fin-areceber-lista');
