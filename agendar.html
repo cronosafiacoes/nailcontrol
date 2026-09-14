@@ -96,10 +96,6 @@
           <label class="form-label">Quantidade</label>
           <input type="number" class="form-input" id="input-quantidade" min="1" value="1">
         </div>
-        <div class="form-group">
-          <label class="form-label">Valor por Alicate (R$)</label>
-          <input type="number" class="form-input" id="input-valor" step="0.01" placeholder="0,00">
-        </div>
         <button class="btn-agendar" onclick="agendar()">Agendar Horário</button>
       </div>
     </div>
@@ -229,7 +225,6 @@
       var endereco = document.getElementById('input-endereco').value.trim();
       var item = document.getElementById('input-item').value.trim();
       var quantidade = parseInt(document.getElementById('input-quantidade').value) || 1;
-      var valor = parseFloat(document.getElementById('input-valor').value) || 0;
 
       if (!nome || !telefone) {
         alert('Preencha nome e telefone!');
@@ -241,6 +236,7 @@
 
       db.ref('nailcontrol/clientes').once('value').then(function(snapshot) {
         var val = snapshot.val();
+        var clienteValor = 0;
         if (val) {
           var keys = Object.keys(val);
           for (var i = 0; i < keys.length; i++) {
@@ -249,6 +245,7 @@
               var telCadastro = c.telefone.replace(/\D/g, '');
               if (telCadastro === telefoneLimpo) {
                 clienteId = c.id;
+                clienteValor = c.valor || 0;
                 break;
               }
             }
@@ -270,9 +267,13 @@
             obs: 'Criado via agendamento público',
             criadoEm: new Date().toISOString()
           };
-          return db.ref('nailcontrol/clientes/' + clienteId).set(novoCliente);
+          return db.ref('nailcontrol/clientes/' + clienteId).set(novoCliente).then(function() {
+            return { valor: 0 };
+          });
         }
-      }).then(function() {
+        return { valor: clienteValor };
+      }).then(function(result) {
+        var valorCliente = (result && result.valor) || 0;
         var novoAgendamento = {
           id: Date.now().toString(),
           clienteId: clienteId,
@@ -285,7 +286,7 @@
           hora: horarioSelecionado,
           item: item || 'Alicate',
           quantidade: quantidade,
-          valor: valor,
+          valor: valorCliente,
           obs: '',
           criadoEm: new Date().toISOString()
         };
