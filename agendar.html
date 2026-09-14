@@ -96,6 +96,10 @@
           <label class="form-label">Quantidade</label>
           <input type="number" class="form-input" id="input-quantidade" min="1" value="1">
         </div>
+        <div class="form-group">
+          <label class="form-label">Valor por Alicate (R$)</label>
+          <input type="number" class="form-input" id="input-valor" step="0.01" placeholder="0,00">
+        </div>
         <button class="btn-agendar" onclick="agendar()">Agendar Horário</button>
       </div>
     </div>
@@ -225,6 +229,7 @@
       var endereco = document.getElementById('input-endereco').value.trim();
       var item = document.getElementById('input-item').value.trim();
       var quantidade = parseInt(document.getElementById('input-quantidade').value) || 1;
+      var valor = parseFloat(document.getElementById('input-valor').value) || 0;
 
       if (!nome || !telefone) {
         alert('Preencha nome e telefone!');
@@ -280,7 +285,7 @@
           hora: horarioSelecionado,
           item: item || 'Alicate',
           quantidade: quantidade,
-          valor: 0,
+          valor: valor,
           obs: '',
           criadoEm: new Date().toISOString()
         };
