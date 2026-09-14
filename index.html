@@ -1948,7 +1948,7 @@ function concluirAgendamento(id) {
   if (agendamento.tipo === 'entrega') {
     const cliente = clientes.find(c => c.id === agendamento.clienteId);
     const qtd = agendamento.quantidade || cliente?.quantidade || 1;
-    const valorTotal = agendamento.valor || 0;
+    const valorTotal = (agendamento.valor || 0) * qtd;
 
     if (valorTotal > 0) {
       financeiro.push({
