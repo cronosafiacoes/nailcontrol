@@ -941,7 +941,7 @@
     <div class="page-header">
       <div>
         <div class="page-title">Clientes</div>
-        <div class="page-subtitle">Organize suas clientes por status</div>
+        <div class="page-subtitle">Todos os seus contatos</div>
       </div>
       <button class="btn btn-primary" onclick="abrirModalCliente()">
         <span>+</span> Nova Cliente
@@ -953,37 +953,21 @@
       <input type="text" placeholder="Buscar cliente..." id="busca-cliente" oninput="renderizarKanban()">
     </div>
 
-    <div class="kanban-board" id="kanban-board">
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="kanban-title">📞 Buscar <span class="kanban-count" id="count-buscar">0</span></div>
-        </div>
-        <div class="kanban-cards" id="col-buscar"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="kanban-title">💬 Atendendo <span class="kanban-count" id="count-atendendo">0</span></div>
-        </div>
-        <div class="kanban-cards" id="col-atendendo"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="kanban-title">⏳ Aguardando <span class="kanban-count" id="count-aguardando">0</span></div>
-        </div>
-        <div class="kanban-cards" id="col-aguardando"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="kanban-title">📦 Levar <span class="kanban-count" id="count-levar">0</span></div>
-        </div>
-        <div class="kanban-cards" id="col-levar"></div>
-      </div>
-      <div class="kanban-col">
-        <div class="kanban-header">
-          <div class="kanban-title">✅ Entregues <span class="kanban-count" id="count-entregues">0</span></div>
-        </div>
-        <div class="kanban-cards" id="col-entregues"></div>
-      </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Item</th>
+            <th>Qtd</th>
+            <th>Valor</th>
+            <th>Pagamento</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clientes-tabela"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1693,49 +1677,22 @@ function excluirCliente(id) {
 
 function renderizarKanban() {
   const busca = (document.getElementById('busca-cliente')?.value || '').toLowerCase();
-  const colunas = {
-    'buscar': clientes.filter(c => c.status === 'buscar' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'atendendo': clientes.filter(c => ['atendendo','fechar-venda'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
-    'aguardando': clientes.filter(c => ['vai-deixar','decidindo','nao-respondeu','curiosa','longe'].includes(c.status) && (!busca || c.nome.toLowerCase().includes(busca))),
-    'levar': clientes.filter(c => c.status === 'levar' && (!busca || c.nome.toLowerCase().includes(busca))),
-    'entregues': clientes.filter(c => c.status === 'entregues' && (!busca || c.nome.toLowerCase().includes(busca)))
-  };
+  const lista = clientes
+    .filter(c => !busca || c.nome.toLowerCase().includes(busca))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
 
-  const statusBadges = {
-    'buscar': { label: '📞 Buscar', class: 'badge-buscar' },
-    'atendendo': { label: '💬 Atendendo', class: 'badge-atendendo' },
-    'vai-deixar': { label: '⏳ Vai deixar', class: 'badge-aguardando' },
-    'decidindo': { label: '🤔 Decidindo', class: 'badge-aguardando' },
-    'nao-respondeu': { label: '❌ Não respondeu', class: 'badge-nao-respondeu' },
-    'curiosa': { label: '🔍 Curiosa', class: 'badge-curiosa' },
-    'longe': { label: '📍 Longe', class: 'badge-longe' },
-    'levar': { label: '📦 Levar', class: 'badge-levar' },
-    'fechar-venda': { label: '📞 Fechar venda', class: 'badge-fechar' },
-    'entregues': { label: '✅ Entregue', class: 'badge-entregues' }
-  };
-
-  Object.keys(colunas).forEach(col => {
-    const container = document.getElementById('col-' + col);
-    const count = document.getElementById('count-' + col);
-    count.textContent = colunas[col].length;
-    container.innerHTML = colunas[col].length ? colunas[col].map(c => {
-      const badge = statusBadges[c.status] || { label: c.status, class: '' };
-      return `
-      <div class="kanban-card" onclick="abrirModalCliente('${c.id}')">
-        <div class="kanban-card-actions">
-          <button onclick="event.stopPropagation();excluirCliente('${c.id}')" title="Excluir">🗑</button>
-        </div>
-        <div class="kanban-card-name">${c.nome}</div>
-        ${c.telefone ? `<div class="kanban-card-info">📱 ${c.telefone}</div>` : ''}
-        ${c.item ? `<div class="kanban-card-info">🧴 ${c.item}${c.quantidade > 1 ? ' (x' + c.quantidade + ')' : ''}</div>` : ''}
-        ${c.endereco ? `<div class="kanban-card-info">📍 ${c.endereco}</div>` : ''}
-        ${c.valor ? `<div class="kanban-card-info">💰 R$ ${c.valor.toFixed(2)}</div>` : ''}
-        <span class="kanban-card-badge ${badge.class}">${badge.label}</span>
-        ${c.obs ? `<div class="kanban-card-info" style="margin-top:4px;font-style:italic;">💬 ${c.obs}</div>` : ''}
-      </div>
-    `;
-    }).join('') : '<div class="empty-state"><p>Nenhuma cliente</p></div>';
-  });
+  const tbody = document.getElementById('clientes-tabela');
+  tbody.innerHTML = lista.length ? lista.map(c => `
+    <tr style="cursor:pointer;" onclick="abrirModalCliente('${c.id}')">
+      <td><strong>${c.nome}</strong></td>
+      <td>${c.telefone || '—'}</td>
+      <td>${c.item || '—'}</td>
+      <td><strong style="color:var(--primary);">${c.quantidade || 1}</strong></td>
+      <td>${c.valor ? formatarMoeda(c.valor) : '—'}</td>
+      <td>${c.pagamento || '—'}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();excluirCliente('${c.id}')">🗑</button></td>
+    </tr>
+  `).join('') : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Nenhuma cliente</td></tr>';
 }
 
 // ============ CALENDARIO ============
