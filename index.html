@@ -1931,11 +1931,19 @@ function salvarAgendamento() {
 
 function excluirAgendamento(id) {
   if (!confirm('Excluir este agendamento?')) return;
+  const agendamento = agendamentos.find(a => a.id === id);
   agendamentos = agendamentos.filter(a => a.id !== id);
   salvarDados('agendamentos', agendamentos);
+
+  if (agendamento && agendamento.tipo !== 'entrega') {
+    financeiro = financeiro.filter(f => f.descricao.indexOf(agendamento.nome || 'Cliente') === -1 || f.categoria !== 'servico');
+    salvarDados('financeiro', financeiro);
+  }
+
   renderizarCalendario();
   renderizarDashboard();
   renderizarTabelaAgendamentos();
+  renderizarFinanceiro();
 }
 
 function concluirAgendamento(id) {
